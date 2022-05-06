@@ -25,4 +25,17 @@ namespace Xertz
 		MUTE = 2,
 		UNMUTE = 3
 	};
+
+	template<typename T> static inline T SwapBytes(const T val)
+	{
+		T temp = 0;
+		char buf;
+
+		for (int i = 0; i < sizeof(val); ++i)
+		{
+			buf = *((char*)(&val) + i);
+			*(reinterpret_cast<char*>(&temp) + sizeof(val) - (1 + i)) = buf;
+		}
+		return temp;
+	}
 }
