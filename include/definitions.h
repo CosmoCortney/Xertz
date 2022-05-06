@@ -38,4 +38,9 @@ namespace Xertz
 		}
 		return temp;
 	}
+
+	template<typename InType, typename OutType> static inline OutType ReinterpreteType(InType val)
+	{
+		return *reinterpret_cast<OutType*>(&val);
+	}
 }
