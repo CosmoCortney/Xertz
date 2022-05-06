@@ -32,7 +32,7 @@ namespace Xertz
 		IMMDeviceEnumerator* _deviceEnumerator = NULL;
 		IMMDevice* _defaultDevice = NULL;
 		IAudioEndpointVolume* _endpointVolume = NULL;
-
+		const float _percentageFactor = 100.0f;
 
 	public:
 		static PROCESS_INFO GetProcessInfo(int pid);

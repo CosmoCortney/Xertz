@@ -133,8 +133,8 @@ bool Xertz::SystemInfo::GetMasterVolume(float* out, int scalarOrDecibel)
 {
 	bool success;
 	success = (bool)GetInstance().PGetMasterVolume();
-	scalarOrDecibel == Xertz::SCALAR ? *out = GetInstance()._masterVolumeScalar : *out = GetInstance()._masterVolumeDecibel;
-	return !success;
+	scalarOrDecibel == Xertz::SCALAR ? *out = GetInstance()._masterVolumeScalar * GetInstance()._percentageFactor : *out = GetInstance()._masterVolumeDecibel;
+	return success;
 }
 
 bool Xertz::SystemInfo::SetMasterVolume(float in, int scalarOrDecibel)
@@ -142,14 +142,14 @@ bool Xertz::SystemInfo::SetMasterVolume(float in, int scalarOrDecibel)
 	bool success;
 	if (scalarOrDecibel == Xertz::SCALAR)
 	{
-		success = (bool)GetInstance()._endpointVolume->SetMasterVolumeLevelScalar(in, NULL);
+		success = (bool)GetInstance()._endpointVolume->SetMasterVolumeLevelScalar(in / GetInstance()._percentageFactor, NULL);
 	} 
 	else
 	{
 		success = (bool)GetInstance()._endpointVolume->SetMasterVolumeLevel(in, NULL);
 	}
 	GetInstance().PGetMasterVolume();
-	return !success;
+	return success;
 }
 
 bool Xertz::SystemInfo::SetMasterMute(int option)
