@@ -3,8 +3,8 @@
 #include<iostream>
 Xertz::SystemInfo::SystemInfo()
 {
-	HRESULT asdf = CoCreateInstance(__uuidof(MMDeviceEnumerator), NULL, CLSCTX_INPROC_SERVER, __uuidof(IMMDeviceEnumerator), (LPVOID*)&_deviceEnumerator);
-	std::cout << std::hex << asdf << std::endl;
+	CoInitialize(nullptr);
+	CoCreateInstance(__uuidof(MMDeviceEnumerator), NULL, CLSCTX_INPROC_SERVER, __uuidof(IMMDeviceEnumerator), (LPVOID*)&_deviceEnumerator);
 
 	if (_deviceEnumerator != nullptr)
 	{
