@@ -157,12 +157,15 @@ bool Xertz::SystemInfo::SetMasterMute(int option)
 	bool success;
 	if (option == Xertz::MUTE)
 	{
-		success = SetMasterVolume(0.0f, Xertz::SCALAR);
 		GetInstance().PGetMasterVolume();
+		float volScal = GetInstance()._masterVolumeScalar, volDec = GetInstance()._masterVolumeDecibel;
+		success = SetMasterVolume(0.0f, Xertz::SCALAR);
+		GetInstance()._masterVolumeScalar = volScal;
+		GetInstance()._masterVolumeDecibel = volDec;
 	}
 	else
 	{
-		success = SetMasterVolume(GetInstance()._masterVolumeScalar, Xertz::SCALAR);
+		success = SetMasterVolume(GetInstance()._masterVolumeScalar * GetInstance()._percentageFactor, Xertz::SCALAR);
 	}
 	return !success;
 }
