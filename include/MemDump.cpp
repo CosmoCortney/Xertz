@@ -17,45 +17,13 @@ Xertz::MemDump::MemDump(std::wstring& path, uint64_t baseAddress, uint64_t start
 	_baseAddress = baseAddress;
 	_startingAddress = startingAddress;
 
-	std::ifstream file;
-	file.open(path, std::ios::binary | std::ios::in);
-	
-	if (file.is_open())
+	_memDump = malloc(_memSize);
+	if (!Xertz::LoadBinary(path, _memDump, 0, 0))
 	{
-		if (size == 0 && pos == 0)
-		{
-			file.seekg(0, std::ios::end);
-			_memSize = file.tellg();
-			file.seekg(0, std::ios::beg);
-			_memDump = malloc(_memSize);
-
-			if (!file.read((char*)_memDump, _memSize))
-			{
-				_baseAddress = _startingAddress = 0;
-				_memDump = nullptr;
-			}
-		}
-		else
-		{
-			file.seekg(0, std::ios::end);
-			uint64_t end = file.tellg();
-			uint64_t readSize = end - pos;
-			if (readSize < size || size == 0)
-			{
-				size = readSize;
-			}
-
-			file.seekg(0, pos);
-			_memDump = malloc(size);
-
-			if (!file.read((char*)_memDump, size))
-			{
-				_baseAddress = _startingAddress = 0;
-				_memDump = nullptr;
-			}
-		}
+		free(_memDump);
+		_baseAddress = _startingAddress = 0;
+		_memDump = nullptr;
 	}
-	file.close();
 }
 
 void Xertz::MemDump::DumpExRAM()
@@ -70,12 +38,5 @@ void Xertz::MemDump::DumpExRAM()
 
 bool Xertz::MemDump::SaveDump(std::wstring& filePath)
 {
-	std::ofstream file(filePath, std::ios::out | std::ios::binary);
-	if (file)
-	{
-		file.write((char*)_memDump, _memSize);
-		file.close();
-		return true;
-	}
-	return false;
+	return Xertz::SaveBinary(filePath, _memDump, _memSize);
 }
