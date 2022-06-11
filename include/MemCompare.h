@@ -10,80 +10,30 @@ namespace Xertz
 	{
 	private:
 		void* _results = nullptr;
-		std::wstring _filePath;
-		void* _fileHeader = malloc(16);
+		std::wstring _filePathAddr;
+		std::wstring _filePathVal;
+		void* _fileHeaderAddr = malloc(16);
+		void* _fileHeaderVal = malloc(16);
 		unsigned short _iteration = 0;
 		unsigned short _addressWidth = 4;
+		unsigned short _resultWidth = 1;
 		unsigned long long _resultCount = 0;
 		bool _cached = false;
-		unsigned int _magic = 0x2e6d6372; //.mcr (LE)
+		unsigned int _magicAddr = 0x6d637261; //mcra (LE)
+		unsigned int _magicVal = 0x6d637276; //mcrv (LE)
 
-		bool SaveResults()
-		{
-			if (Xertz::SaveBinary(_filePath, _fileHeader, 16))
-			{
-				return Xertz::SaveBinary(_filePath, _results, _resultCount * _addressWidth, true);
-			}
-			return false;
-		}
-
-		bool LoadResults()
-		{
-			if (Xertz::LoadBinary(_filePath, _fileHeader, 16, 0))
-			{
-				if (*(unsigned int*)_fileHeader == _magic)
-				{
-					_iteration = *((unsigned short*)_fileHeader + 2);
-					_addressWidth = *((unsigned short*)_fileHeader + 3);
-					_resultCount = *((unsigned long long*)_fileHeader + 1);
-					_results = malloc(_resultCount * _addressWidth);
-					return Xertz::LoadBinary(_filePath, _results, _resultCount * _addressWidth, 16);
-				}
-			}
-			return false;
-		}
+		bool SaveResults();
+		bool LoadResults();
 
 	public:
-		MemCompareResult(bool cached, unsigned short addressWidth, unsigned long long resultCount, short iteration, void* results = nullptr, std::wstring dirPath = L"")
-		{
-			_cached = cached;
-			_iteration = iteration;
-			_resultCount = resultCount;
-			_addressWidth = addressWidth;
-			_results = results;
-			_filePath = dirPath;
-			_filePath.append(L"\\").append(std::to_wstring(iteration)).append(L".mcr");
+		MemCompareResult(bool cached, unsigned short addressWidth, unsigned short resultWidth, unsigned long long resultCount, unsigned short iteration, void* results = nullptr, std::wstring dirPath = L"");
+		~MemCompareResult();
 
-			*(unsigned int*)_fileHeader = _magic;
-			*((unsigned short*)_fileHeader + 2) = _iteration;
-			*((unsigned short*)_fileHeader + 3) = _addressWidth;
-			*((unsigned long long*)_fileHeader + 1) = _resultCount;
-
-			if (cached && results == nullptr)
-			{
-				LoadResults();
-			}
-			else if (cached && results != nullptr)
-			{
-				SaveResults();
-			}
-			else
-			{
-				_results = results;
-			}
-		}
-
-		~MemCompareResult()
-		{
-			free(_results);
-			free(_fileHeader);
-		}
-
-		void* GetResults() { return _results; }
-		unsigned short GetIteration() { return _iteration; }
-		unsigned short GetAddressWidth() { return _addressWidth; }
-		unsigned long long GetResultsCount() { return _resultCount; }
-		bool IsCached() { return _cached; }
+		void* GetResults();
+		unsigned short GetIteration();
+		unsigned short GetAddressWidth();
+		unsigned long long GetResultsCount();
+		bool IsCached();
 	};
 
 	class MemCompare
@@ -131,7 +81,17 @@ namespace Xertz
 		};
 
 	public:
-		template<typename T> uint64_t InitialUnknown();
+
+
+
+		template<typename T> uint64_t InitialUnknown()
+		{
+
+		}
+
+
+
+
 		template<typename T> uint64_t InitialKnownFloat(T value, T valueOpt, int op, T precision);
 		template<typename T> uint64_t InitialKnownInt(T value, T valueOpt, int op);
 		template<typename T> uint64_t InitialKnownText(T value, int op, bool caseSensitive, int codec);
