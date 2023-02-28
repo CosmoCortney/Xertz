@@ -61,7 +61,7 @@ bool Xertz::MemCompareResult::SaveResults()
 }
 
 bool Xertz::MemCompareResult::LoadResults()
-{
+{/*
 	if (Xertz::LoadBinary(_filePath, _fileHeader, 16, 0))
 	{
 		if (*(unsigned int*)_fileHeader == _magicAddr)
@@ -72,7 +72,7 @@ bool Xertz::MemCompareResult::LoadResults()
 			_results = malloc(_resultCount * _addressWidth);
 			return Xertz::LoadBinary(_filePath, _results, _resultCount * _addressWidth, 16);
 		}
-	}
+	}*/
 	return false;
 }
 
