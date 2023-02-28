@@ -32,7 +32,8 @@ namespace Xertz
         uint64_t GetModuleAddress(std::wstring moduleName);
         MODULE_LIST& GetModuleList();
         REGION_LIST& GetRegionList();
-        HANDLE GetHandle(int64_t accessMode, bool inheritHandle);
+        HANDLE InitHandle(int64_t accessMode, bool inheritHandle);
+        HANDLE GetHandle();
         bool IsX64();
         bool IsRunning();
         std::wstring& GetFilePath();

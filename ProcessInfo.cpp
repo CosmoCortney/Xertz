@@ -118,9 +118,14 @@ REGION_LIST& Xertz::ProcessInfo::GetRegionList()
     return _memoryRegions;
 }
 
-HANDLE Xertz::ProcessInfo::GetHandle(int64_t accessMode, bool inheritHandle)
+HANDLE Xertz::ProcessInfo::InitHandle(int64_t accessMode, bool inheritHandle)
 {
     return OpenProcess(accessMode, inheritHandle, _pid);
+}
+
+HANDLE Xertz::ProcessInfo::GetHandle()
+{
+    return _handle;
 }
 
 std::wstring& Xertz::ProcessInfo::GetFilePath()
