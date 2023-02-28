@@ -150,3 +150,8 @@ Xertz::MemDump Xertz::ProcessInfo::DumpMemory(uint64_t baseAddress, uint64_t sta
 
     return Xertz::MemDump(_handle, baseAddress, startingAddress, size);
 }
+
+void Xertz::ProcessInfo::ReadExRAM(void* out, void* address, unsigned long long size)
+{
+    ReadProcessMemory(_handle, address, out, size, nullptr);
+}
