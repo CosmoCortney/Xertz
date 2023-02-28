@@ -19,7 +19,7 @@ Xertz::ProcessInfo::ProcessInfo(int pid, std::wstring processName)
 
         //Get program file path
         WCHAR path[MAX_PATH];
-        GetModuleFileNameEx(_handle, NULL, path, MAX_PATH);
+        GetModuleFileNameExW(_handle, NULL, path, MAX_PATH);
         _filepath = path;
     }
 }
@@ -30,7 +30,7 @@ bool Xertz::ProcessInfo::RefreshModuleList()
     {
         _modules.clear();
         HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, _pid);
-        MODULEENTRY32 moduleEntry;
+        MODULEENTRY32W moduleEntry;
         moduleEntry.dwSize = sizeof(moduleEntry);
 
         if (Module32FirstW(snap, &moduleEntry))
