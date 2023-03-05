@@ -16,6 +16,7 @@ namespace Xertz
         bool _isRunning;
 		int _pid = -1;
         HANDLE _handle;
+        HWND _windowHandle;
         std::wstring _processName;
         REGION_LIST _memoryRegions;
         MODULE_LIST _modules;
@@ -34,6 +35,8 @@ namespace Xertz
         REGION_LIST& GetRegionList();
         HANDLE InitHandle(int64_t accessMode, bool inheritHandle);
         HANDLE GetHandle();
+        HWND GetWindowHandle(std::wstring windowTitle);
+        HWND GetWindowHandle(std::string windowTitle);
         bool IsX64();
         bool IsRunning();
         std::wstring& GetFilePath();
