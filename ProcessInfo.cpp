@@ -128,18 +128,6 @@ HANDLE Xertz::ProcessInfo::GetHandle()
     return _handle;
 }
 
-HWND Xertz::ProcessInfo::GetWindowHandle(std::wstring windowTitle)
-{
-    _windowHandle = FindWindowW(NULL, windowTitle.c_str());
-    return _windowHandle;
-}
-
-HWND Xertz::ProcessInfo::GetWindowHandle(std::string windowTitle)
-{
-    _windowHandle = FindWindowA(NULL, windowTitle.c_str());
-    return _windowHandle;
-}
-
 std::wstring& Xertz::ProcessInfo::GetFilePath()
 {
     return _filepath;

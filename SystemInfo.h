@@ -43,5 +43,12 @@ namespace Xertz
 		static bool GetMasterVolume(float* out, int scalarOrDecibel);
 		static bool SetMasterVolume(float in, int scalarOrDecibel);
 		static bool SetMasterMute(int option);
+        template<typename T> static HWND GetWindowHandle(T windowTitle)
+		{
+			 if constexpr (std::is_same_v<T, std::wstring>)
+			 	return FindWindowW(NULL, windowTitle.c_str());
+    		
+			return FindWindowA(NULL, windowTitle.c_str());
+		}
 	};
 }
