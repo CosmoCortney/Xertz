@@ -145,10 +145,10 @@ bool Xertz::ProcessInfo::IsRunning()
     return _isRunning;
 }
 
-Xertz::MemDump Xertz::ProcessInfo::DumpMemory(uint64_t baseAddress, uint64_t startingAddress, uint64_t size)
+Xertz::MemDump Xertz::ProcessInfo::DumpMemory(void* address, uint64_t size)
 {
 
-    return Xertz::MemDump(_handle, baseAddress, startingAddress, size);
+    return Xertz::MemDump(_handle, address, size);
 }
 
 void Xertz::ProcessInfo::ReadExRAM(void* out, void* address, unsigned long long size)
