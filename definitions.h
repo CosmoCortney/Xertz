@@ -3,6 +3,7 @@
 #include <cinttypes>
 #include<fstream>
 #include<string>
+#include<vector>
 
 namespace Xertz
 {
@@ -58,7 +59,7 @@ namespace Xertz
 		return false;
 	}
 
-	static bool LoadBinary(std::wstring& filePath, void* out, uint64_t size, uint64_t startPos)
+	static bool LoadBinary(std::wstring& filePath, void*& out, uint64_t& size, uint64_t startPos = 0)
 	{
 		std::ifstream file;
 		file.open(filePath, std::ios::binary | std::ios::in);
@@ -72,9 +73,11 @@ namespace Xertz
 			if (size == 0 && startPos == 0) //read all
 			{
 				size = end;
+				out = malloc(size);
 			}
 			else //read fraction
 			{
+				out = malloc(size);
 				uint64_t readableSize = end - startPos;
 				file.seekg(startPos, std::ios::cur);
 				
