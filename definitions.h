@@ -4,6 +4,9 @@
 #include<fstream>
 #include<string>
 #include<vector>
+//#include"zlib.h"
+//#include"zlib/deflate.h"
+//#include"zlib/inflate.h"
 
 namespace Xertz
 {
@@ -64,21 +67,51 @@ namespace Xertz
 		return temp;
 	}
 
+	//a person with undefined behavior may create code with undefined behavior
 	template<typename InType, typename OutType> static inline OutType ReinterpreteType(InType val)
 	{
 		return *reinterpret_cast<OutType*>(&val);
 	}
 
-	static bool SaveBinary(std::wstring& filePath, void* data, uint64_t size, bool append = false)
+	static bool SaveBinary(std::wstring& filePath, void* data, uint64_t size, bool append = false, bool zip = false)
 	{
 		std::ofstream file(filePath, std::ios::binary | (append ? std::ios_base::app : std::ios::out));
-		if (file)
+		if (!file)
+			return false;
+		
+		/*if (zip)
 		{
-			file.write((char*)data, size);
+			const int CHUNK_SIZE = 0x4000;
+			char out_buffer[CHUNK_SIZE];
+
+			z_stream strm;
+			strm.zalloc = Z_NULL;
+			strm.zfree = Z_NULL;
+			strm.opaque = Z_NULL;
+			deflateInit(&strm, Z_DEFAULT_COMPRESSION);
+
+			strm.avail_in = size;
+			strm.next_in = reinterpret_cast<Bytef*>((char*)data);
+
+			int bytes_written;
+			do {
+				strm.avail_out = CHUNK_SIZE;
+				strm.next_out = reinterpret_cast<Bytef*>(out_buffer);
+				deflate(&strm, Z_FINISH);
+				bytes_written = CHUNK_SIZE - strm.avail_out;
+				file.write(out_buffer, bytes_written);
+			} while (strm.avail_out == 0);
+
+			deflateEnd(&strm);
 			file.close();
+
 			return true;
-		}
-		return false;
+		}*/
+
+		file.write((char*)data, size);
+		file.close();
+
+		return true;
 	}
 
 	static bool LoadBinary(std::wstring& filePath, void*& out, uint64_t& size, uint64_t startPos = 0)
