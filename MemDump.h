@@ -8,7 +8,7 @@ namespace Xertz
 	class MemDump
 	{
 	private:
-		void* _address = 0;
+		void* _address = nullptr;
 		uint64_t _memSize = 0;
 		void* _memDump = nullptr;
 		std::wstring _filePath;
@@ -36,6 +36,7 @@ namespace Xertz
 			_filePath = other._filePath;
 			_handle = other._handle;
 			_hasHandle = other._hasHandle;
+			free(_memDump);
 			_memDump = malloc(_memSize);
 			if (_memDump)
 				memcpy(_memDump, other._memDump, _memSize);

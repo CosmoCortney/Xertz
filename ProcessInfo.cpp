@@ -155,3 +155,8 @@ void Xertz::ProcessInfo::ReadExRAM(void* out, void* address, unsigned long long 
 {
     ReadProcessMemory(_handle, address, out, size, nullptr);
 }
+
+void Xertz::ProcessInfo::WriteExRAM(void* in, void* address, unsigned long long size)
+{
+    WriteProcessMemory(_handle, address, in, size, nullptr);
+}
