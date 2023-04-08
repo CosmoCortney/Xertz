@@ -3,6 +3,7 @@
 #include"MemDump.h"
 #include<functional>
 #include<iostream>
+#include"OperativeArray.h"
 
 namespace Xertz
 {
@@ -22,10 +23,6 @@ namespace Xertz
 		uint64_t _fileSize = 0;
 		bool _cached = false;
 		bool _zipped = false;
-		bool _fileHeaderAllocatedWithNew = false;
-		bool _offsetsAllocatedWithNew = false;
-		bool _valuesAllocatedWithNew = false;
-		bool _previousValuesAllocatedWithNew = false;
 		bool _hasAddresses = false;
 		bool _hasValues = false;
 		bool _hasPreviousValues = false;
@@ -39,17 +36,14 @@ namespace Xertz
 			*((uint8_t*)_fileHeader + VALUE_WIDTH) = _valueWidth;
 		}
 
-		template<typename whatever>void SetAllocationFlags(whatever* ptr, bool& flag)
+		void Deallocate(void* ptr)
 		{
-			if constexpr (std::is_class<whatever>::value)
+			uint64_t size = _addressWidth * _resultCount;
+
+			if (ptr != nullptr)
 			{
-				flag = (dynamic_cast<void*>(new(std::nothrow) whatever[1]) == dynamic_cast<void*>(ptr));
-			}
-			else
-			{
-				void* tmp = malloc(sizeof(whatever));
-				flag = (tmp == (void*)ptr);
-				free(tmp);
+				free(ptr);
+				ptr = nullptr;
 			}
 		}
 
@@ -97,41 +91,18 @@ namespace Xertz
 
 		void FreeData(bool headerOnly)
 		{
-			if (_fileHeaderAllocatedWithNew)
-			{
-				delete[] _fileHeader;
-				_fileHeader = nullptr;
-			}
-			else
-				free(_fileHeader);
+			free(_fileHeader);
+			_fileHeader = nullptr;
 
 			if (headerOnly)
 				return;
 
-			if (_offsetsAllocatedWithNew)
-			{
-				delete[] _offsets;
-				_offsets = nullptr;
-			}
-			else
-				free(_offsets);
-
-			if (_valuesAllocatedWithNew)
-			{
-				delete[] _values;
-				_values = nullptr;
-			}
-			else
-				free(_values);
-
-			if (_previousValuesAllocatedWithNew)
-			{
-				delete[] _previousValues;
-				_previousValues = nullptr;
-			}
-			else
-				free(_previousValues);
-
+			free(_offsets);
+			_offsets = nullptr;
+			free(_values);
+			_values = nullptr;
+			free(_previousValues);
+			_previousValues = nullptr;
 			_hasValues = false;
 			_hasPreviousValues = false;
 			_hasAddresses = false;
@@ -139,22 +110,28 @@ namespace Xertz
 
 		void SetResultValues(dataType* ptr)
 		{
-			_values = ptr;
-			SetAllocationFlags(ptr, _valuesAllocatedWithNew);
+			uint64_t size = _addressWidth * _resultCount;
+			Deallocate((void*)_values);
+			_values = (dataType*)malloc(size);
+			memcpy(_values, ptr, size);
 			_hasValues = true;
 		}
 
 		void SetResultPreviousValues(dataType* ptr)
 		{
-			_previousValues = ptr;
-			SetAllocationFlags(ptr, _previousValuesAllocatedWithNew);
+			uint64_t size = _addressWidth * _resultCount;
+			Deallocate((void*)_previousValues);
+			_previousValues = (dataType*)malloc(size);
+			memcpy(_previousValues, ptr, size);
 			_hasPreviousValues = true;
 		}
 
 		void SetResultOffsets(addressType* ptr)
 		{
-			_offsets = ptr;
-			SetAllocationFlags(ptr, _offsetsAllocatedWithNew);
+			uint64_t size = _addressWidth * _resultCount;
+			Deallocate((void*)_offsets);
+			_offsets = (addressType*)malloc(size);
+			memcpy(_offsets, ptr, size);
 			_hasAddresses = true;
 		}
 

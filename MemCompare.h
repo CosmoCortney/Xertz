@@ -287,19 +287,26 @@ namespace Xertz
 			}
 		}
 
-		bool SetAndSaveResults(addressType* addresses, dataType* values, dataType* previousValues)
+		bool SetAndSaveResults()
 		{
 			if (_iterationCount > 0)
 			{
-				addresses = (addressType*)realloc(addresses, sizeof(addressType) * _resultCount);
-				values = (dataType*)realloc(values, sizeof(dataType) * _resultCount);
-				previousValues = (dataType*)realloc(previousValues, sizeof(dataType) * _resultCount);
+				_addresses = (addressType*)realloc(_addresses, sizeof(addressType) * _resultCount);
+				_values = (dataType*)realloc(_values, _valueSizeFactor * _resultCount);
+				_previousValues = (dataType*)realloc(_previousValues, _valueSizeFactor * _resultCount);
 			}
 
 			_results.push_back(new MemCompareResult<dataType, addressType>(false, GenerateFilePath(), _resultCount));
-			_results[_iterationCount]->SetResultValues(values);
-			_results[_iterationCount]->SetResultPreviousValues(previousValues);
-			_results[_iterationCount]->SetResultOffsets(addresses);
+			_results[_iterationCount]->SetResultValues(_values);
+			_results[_iterationCount]->SetResultPreviousValues(_previousValues);
+			_results[_iterationCount]->SetResultOffsets(_addresses);
+
+			free(_addresses);
+			_addresses = nullptr;
+			free(_values);
+			_values = nullptr;
+			free(_previousValues);
+			_previousValues = nullptr;
 
 			if (_cached)
 				return true;
@@ -353,13 +360,13 @@ namespace Xertz
 				if constexpr (std::is_floating_point<dataType>::value)
 					_comparisionOperator.opPrecision = CompareOperator<dataType>::not_equal_precision;
 				else if constexpr (std::is_integral<dataType>::value)
-				_comparisionOperator.opSimple = CompareOperator<dataType>::not_equal;
+					_comparisionOperator.opSimple = CompareOperator<dataType>::not_equal;
 				break;
 			case LOWER:
 				if constexpr (std::is_floating_point<dataType>::value)
 					_comparisionOperator.opPrecision = CompareOperator<dataType>::lower_precision;
 				else if constexpr (std::is_integral<dataType>::value)
-				_comparisionOperator.opSimple = CompareOperator<dataType>::lower;
+					_comparisionOperator.opSimple = CompareOperator<dataType>::lower;
 				break;
 			case LOWER_EQUAL:
 				if constexpr (std::is_floating_point<dataType>::value)
@@ -371,13 +378,13 @@ namespace Xertz
 				if constexpr (std::is_floating_point<dataType>::value)
 					_comparisionOperator.opPrecision = CompareOperator<dataType>::greater_precision;
 				else if constexpr (std::is_integral<dataType>::value)
-				_comparisionOperator.opSimple = CompareOperator<dataType>::greater;
+					_comparisionOperator.opSimple = CompareOperator<dataType>::greater;
 				break;
 			case GREATER_EQUAL:
 				if constexpr (std::is_floating_point<dataType>::value)
 					_comparisionOperator.opPrecision = CompareOperator<dataType>::greater_equal_precision;
 				else if constexpr (std::is_integral<dataType>::value)
-				_comparisionOperator.opSimple = CompareOperator<dataType>::greater_equal;
+					_comparisionOperator.opSimple = CompareOperator<dataType>::greater_equal;
 				break;
 			case AND:
 				if constexpr (std::is_integral_v<dataType>)
