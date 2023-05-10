@@ -40,12 +40,12 @@ namespace Xertz
 		GREATER_EQUAL = 3,
 		LOWER = 4,
 		LOWER_EQUAL = 5,
-		AND = 6,
-		OR = 7,
-		INCREASED_BY = 8,
-		DECREASED_BY = 9,
-		BETWEEN = 10,
-		NOT_BETWEEN = 11
+		INCREASED_BY = 6,
+		DECREASED_BY = 7,
+		BETWEEN = 8,
+		NOT_BETWEEN = 9,
+		AND = 10,
+		OR = 11,
 	};
 
 	enum ComparasionTypes
