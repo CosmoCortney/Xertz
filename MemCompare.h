@@ -161,7 +161,7 @@ namespace Xertz
 						}
 					}
 				}
-				else if constexpr(std::is_floating_point_v<dataType>)
+				else if constexpr (std::is_floating_point_v<dataType>)
 				{
 					for (uint64_t offsetDump = 0; offsetDump < _dumpSize; offsetDump += _alignment)
 					{
@@ -174,10 +174,6 @@ namespace Xertz
 							++_resultCount;
 						}
 					}
-				}
-				else //OperativeArray
-				{
-
 				}
 			}
 			else
@@ -196,7 +192,7 @@ namespace Xertz
 						}
 					}
 				}
-				else
+				else if constexpr (std::is_floating_point_v<dataType>)
 				{
 					for (uint64_t offsetDump = 0; offsetDump < _dumpSize; offsetDump += _alignment)
 					{
@@ -209,6 +205,66 @@ namespace Xertz
 							++_resultCount;
 						}
 					}
+				}
+			}
+		}
+		
+		template <typename arrayType> void InitialKnownArray()
+		{
+			uint32_t itemCount = _knownValue.ItemCount();
+			dataType readArr(static_cast<arrayType>(0), itemCount);
+			DataAccess<arrayType> byteReader;
+			byteReader.reader = _swapBytes ? DataAccess<arrayType>::readReversed : DataAccess<arrayType>::read;
+
+			for (uint64_t offsetDump = 0; offsetDump < _dumpSize - (readArr.ItemCount()-1) * sizeof(arrayType); offsetDump += _alignment)
+			{
+				for (int index = 0; index < itemCount; ++index)
+				{
+					readArr[index] = byteReader(*(arrayType*)(_currentDump.GetDump<uint8_t*>() + offsetDump + index*sizeof(arrayType)));
+				}
+
+				if (_comparisionOperator(_knownValue, readArr/*, _precision, false*/))
+				{
+					*(_addresses + _resultCount) = offsetDump;
+
+					for (int index = 0; index < itemCount; ++index)
+					{
+						*((arrayType*)_values + _resultCount * itemCount + index) = readArr[index];
+						*((arrayType*)_previousValues + _resultCount * itemCount + index) = 0;
+					}
+
+					++_resultCount;
+				}
+			}
+		}
+
+		template <typename arrayType> void SuccessiveKnownArray()
+		{
+			uint32_t itemCount = _knownValue.ItemCount();
+			DataAccess<arrayType> byteReader;
+			byteReader.reader = _swapBytes ? DataAccess<arrayType>::readReversed : DataAccess<arrayType>::read;
+			dataType readArr(static_cast<arrayType>(0), itemCount);
+
+			for (uint64_t i = 0; i < _results[_iterationCount - 1]->GetResultCount(); ++i)
+			{
+				uint64_t readOffset = *(_results[_iterationCount - 1]->GetResultOffsets() + i);
+				
+				for (int index = 0; index < itemCount; ++index)
+				{
+					readArr[index] = byteReader(*(arrayType*)(_currentDump.GetDump<uint8_t*>() + readOffset + index * sizeof(arrayType)));
+				}
+
+				if (_comparisionOperator(_knownValue, readArr/*, _precision, false*/))
+				{
+					*(_addresses + _resultCount) = *(_results[_iterationCount - 1]->GetResultOffsets() + i);
+
+					for (int index = 0; index < itemCount; ++index)
+					{
+						*((arrayType*)_values + _resultCount * itemCount + index) = readArr[index];
+						*((arrayType*)_previousValues + _resultCount * itemCount + index) = *((arrayType*)(_results[_iterationCount - 1]->GetResultValues()) + _resultCount * itemCount + index);
+					}
+
+					++_resultCount;
 				}
 			}
 		}
@@ -289,14 +345,12 @@ namespace Xertz
 
 		bool SetAndSaveResults()
 		{
-			if (_iterationCount > 0)
-			{
-				_addresses = (addressType*)realloc(_addresses, sizeof(addressType) * _resultCount);
-				_values = (dataType*)realloc(_values, _valueSizeFactor * _resultCount);
-				_previousValues = (dataType*)realloc(_previousValues, _valueSizeFactor * _resultCount);
-			}
+			_addresses = (addressType*)realloc(_addresses, sizeof(addressType) * _resultCount);
+			_values = (dataType*)realloc(_values, _valueSizeFactor * _resultCount);
+			_previousValues = (dataType*)realloc(_previousValues, _valueSizeFactor * _resultCount);
 
 			_results.push_back(new MemCompareResult<dataType, addressType>(false, GenerateFilePath(), _resultCount));
+			_results[_iterationCount]->SetValueWidth(&_knownValue);
 			_results[_iterationCount]->SetResultValues(_values);
 			_results[_iterationCount]->SetResultPreviousValues(_previousValues);
 			_results[_iterationCount]->SetResultOffsets(_addresses);
@@ -319,27 +373,30 @@ namespace Xertz
 		void ReserveResultsSpace()
 		{
 			_currentDump = Xertz::SystemInfo::GetProcessInfo(_pid).DumpMemory(_dumpAddress, _dumpSize);
-			_byteReader.reader = _swapBytes ? DataAccess<dataType>::readReversed : DataAccess<dataType>::read;
 			_addresses = (addressType*)malloc(_dumpSize * sizeof(addressType));
 
 			if constexpr (!std::is_integral_v<dataType> && !std::is_floating_point_v<dataType>)
 			{
 				const std::type_info* typeID = _knownValue.UnderlyingTypeID();
-				if (*typeID == typeid(uint8_t) || *typeID == typeid(int8_t))
+				if (*typeID == typeid(uint8_t))
+				{
+					_valueSizeFactor = 1;
+				}
+				else if (*typeID == typeid(uint8_t) || *typeID == typeid(int8_t))
 					_valueSizeFactor = 1;
 				else if (*typeID == typeid(uint16_t) || *typeID == typeid(int16_t))
 					_valueSizeFactor = 2;
 				else if (*typeID == typeid(uint64_t) || *typeID == typeid(int64_t) || *typeID == typeid(double))
 					_valueSizeFactor = 8;
-				else
+				else //float, int32, uint32, ...
 					_valueSizeFactor = 4;
 
 				_valueSizeFactor *= _knownValue.ItemCount();
-				delete typeID;
 			}
-			else
+			else// float, integral
 			{
 				_valueSizeFactor = sizeof(dataType);
+				_byteReader.reader = _swapBytes ? DataAccess<dataType>::readReversed : DataAccess<dataType>::read;
 			}
 
 			_values = (dataType*)malloc(_dumpSize * _valueSizeFactor);
@@ -351,40 +408,48 @@ namespace Xertz
 			switch (_condition)
 			{
 			case EQUAL:
-				if constexpr (std::is_floating_point<dataType>::value)
+				if constexpr (std::is_floating_point_v<dataType>)
 					_comparisionOperator.opPrecision = CompareOperator<dataType>::equal_precision;
-				else if constexpr (std::is_integral<dataType>::value)
+				else// if constexpr (std::is_integral_v<dataType>)
 					_comparisionOperator.opSimple = CompareOperator<dataType>::equal;
 				break;
 			case UNEQUAL:
-				if constexpr (std::is_floating_point<dataType>::value)
+				if constexpr (std::is_floating_point_v<dataType>)
 					_comparisionOperator.opPrecision = CompareOperator<dataType>::not_equal_precision;
-				else if constexpr (std::is_integral<dataType>::value)
+				else// if constexpr (std::is_integral_v<dataType>)
 					_comparisionOperator.opSimple = CompareOperator<dataType>::not_equal;
 				break;
 			case LOWER:
-				if constexpr (std::is_floating_point<dataType>::value)
+				if constexpr (std::is_floating_point_v<dataType>)
 					_comparisionOperator.opPrecision = CompareOperator<dataType>::lower_precision;
-				else if constexpr (std::is_integral<dataType>::value)
+				else if constexpr (std::is_integral_v<dataType>)
 					_comparisionOperator.opSimple = CompareOperator<dataType>::lower;
+				else //OperativeArray
+					_comparisionOperator.opSimple = CompareOperator<dataType>::dummy;
 				break;
 			case LOWER_EQUAL:
-				if constexpr (std::is_floating_point<dataType>::value)
+				if constexpr (std::is_floating_point_v<dataType>)
 					_comparisionOperator.opPrecision = CompareOperator<dataType>::lower_equal_precision;
-				else if constexpr (std::is_integral<dataType>::value)
+				else if constexpr (std::is_integral_v<dataType>)
 				_comparisionOperator.opSimple = CompareOperator<dataType>::lower_equal;
+				else //OperativeArray
+					_comparisionOperator.opSimple = CompareOperator<dataType>::dummy;
 				break;
 			case GREATER:
-				if constexpr (std::is_floating_point<dataType>::value)
+				if constexpr (std::is_floating_point_v<dataType>)
 					_comparisionOperator.opPrecision = CompareOperator<dataType>::greater_precision;
-				else if constexpr (std::is_integral<dataType>::value)
+				else if constexpr (std::is_integral_v<dataType>)
 					_comparisionOperator.opSimple = CompareOperator<dataType>::greater;
+				else //OperativeArray
+					_comparisionOperator.opSimple = CompareOperator<dataType>::dummy;
 				break;
 			case GREATER_EQUAL:
-				if constexpr (std::is_floating_point<dataType>::value)
+				if constexpr (std::is_floating_point_v<dataType>)
 					_comparisionOperator.opPrecision = CompareOperator<dataType>::greater_equal_precision;
-				else if constexpr (std::is_integral<dataType>::value)
+				else if constexpr (std::is_integral_v<dataType>)
 					_comparisionOperator.opSimple = CompareOperator<dataType>::greater_equal;
+				else //OperativeArray
+					_comparisionOperator.opSimple = CompareOperator<dataType>::dummy;
 				break;
 			case AND:
 				if constexpr (std::is_integral_v<dataType>)
@@ -399,28 +464,36 @@ namespace Xertz
 					_comparisionOperator.opSimple = CompareOperator<dataType>::dummy;
 				break;
 			case INCREASED_BY:
-				if constexpr (std::is_integral_v<dataType>)
-					_comparisionOperator.opRange = CompareOperator<dataType>::increased;
-				else if constexpr (std::is_floating_point<dataType>::value)
+				if constexpr (std::is_floating_point_v<dataType>)
 					_comparisionOperator.opRangePrecision = CompareOperator<dataType>::increased_precision;
+				else if constexpr (std::is_floating_point_v<dataType>)
+					_comparisionOperator.opRange = CompareOperator<dataType>::increased;
+				else //OperativeArray
+					_comparisionOperator.opRange = CompareOperator<dataType>::dummy_range;
 				break;
 			case DECREASED_BY:
-				if constexpr (std::is_integral_v<dataType>)
+				if constexpr (std::is_floating_point_v<dataType>)
+				_comparisionOperator.opRangePrecision = CompareOperator<dataType>::decreased_precision;
+				else if constexpr (std::is_floating_point_v<dataType>)
 					_comparisionOperator.opRange = CompareOperator<dataType>::decreased;
-				else if constexpr (std::is_floating_point<dataType>::value)
-					_comparisionOperator.opRangePrecision = CompareOperator<dataType>::decreased_precision;
+				else //OperativeArray
+					_comparisionOperator.opRange = CompareOperator<dataType>::dummy_range;
 				break;
 			case BETWEEN:
-				if constexpr (std::is_integral_v<dataType>)
+				if constexpr (std::is_floating_point_v<dataType>)
+				_comparisionOperator.opRangePrecision = CompareOperator<dataType>::between_precision;
+				else if constexpr (std::is_floating_point_v<dataType>)
 					_comparisionOperator.opRange = CompareOperator<dataType>::between;
-				else if constexpr (std::is_floating_point<dataType>::value)
-					_comparisionOperator.opRangePrecision = CompareOperator<dataType>::between_precision;
+				else //OperativeArray
+					_comparisionOperator.opRange = CompareOperator<dataType>::dummy_range;
 				break;
 			case NOT_BETWEEN:
-				if constexpr (std::is_integral_v<dataType>)
+				if constexpr (std::is_floating_point_v<dataType>)
+				_comparisionOperator.opRangePrecision = CompareOperator<dataType>::not_between_precision;
+				else if constexpr (std::is_floating_point_v<dataType>)
 					_comparisionOperator.opRange = CompareOperator<dataType>::not_between;
-				else if constexpr (std::is_floating_point<dataType>::value)
-					_comparisionOperator.opRangePrecision = CompareOperator<dataType>::not_between_precision;
+				else //OperativeArray
+					_comparisionOperator.opRange = CompareOperator<dataType>::dummy_range;
 				break;
 
 			default:
@@ -430,7 +503,7 @@ namespace Xertz
 		}
 
 	public:
-		//I'm doing this kind of overloading here because I can't set template parameters optional (multiple definitions). Some also have to be references since they may pass arrays
+		//I'm doing this kind of overloading here because I can't set template parameters optional (multiple definitions). Some parameters also have to be passed by references since they may be more complex structures
 		static uint64_t Iterate(void* dumpAddress, uint64_t dumpSize, int32_t condition, bool isKnownValue, float precision)
 		{
 			dataType dummyVal;
@@ -458,20 +531,83 @@ namespace Xertz
 			GetInstance().ReserveResultsSpace();
 			GetInstance().SetUpComparasionOperator();
 
-			if (GetInstance()._iterationCount == 0)
+			if constexpr (is_instantiation_of<dataType, OperativeArray>::value)
 			{
-				if (isKnownValue)
-					GetInstance().InitialKnown();
+				const std::type_info* typeID = GetInstance()._knownValue.UnderlyingTypeID();
+
+				if (GetInstance()._iterationCount == 0)
+				{
+					if (isKnownValue)
+					{
+						if (*typeID == typeid(uint8_t))
+							GetInstance().InitialKnownArray<uint8_t>();
+						else if (*typeID == typeid(int8_t))
+							GetInstance().InitialKnownArray<int8_t>();
+						else if (*typeID == typeid(uint16_t))
+							GetInstance().InitialKnownArray<uint16_t>();
+						else if (*typeID == typeid(int16_t))
+							GetInstance().InitialKnownArray<int16_t>();
+						else if (*typeID == typeid(int32_t))
+							GetInstance().InitialKnownArray<int32_t>();
+						//else if (*typeID == typeid(float))
+						//	GetInstance().InitialKnownArray<float>();
+						else if (*typeID == typeid(uint64_t))
+							GetInstance().InitialKnownArray<uint64_t>();
+						else if (*typeID == typeid(int64_t))
+							GetInstance().InitialKnownArray<int64_t>();
+						//else if (*typeID == typeid(double))
+						//	GetInstance().InitialKnownArray<double>();
+						else
+							GetInstance().InitialKnownArray<uint32_t>();
+					}
+				}
 				else
-					GetInstance().InitialUnknown();
+				{
+					if (isKnownValue)
+					{
+						if (*typeID == typeid(uint8_t))
+							GetInstance().SuccessiveKnownArray<uint8_t>();
+						else if (*typeID == typeid(int8_t))
+							GetInstance().SuccessiveKnownArray<int8_t>();
+						else if (*typeID == typeid(uint16_t))
+							GetInstance().SuccessiveKnownArray<uint16_t>();
+						else if (*typeID == typeid(int16_t))
+							GetInstance().SuccessiveKnownArray<int16_t>();
+						else if (*typeID == typeid(int32_t))
+							GetInstance().SuccessiveKnownArray<int32_t>();
+						//else if (*typeID == typeid(float))
+						//	GetInstance().SuccessiveKnownArray<float>();
+						else if (*typeID == typeid(uint64_t))
+							GetInstance().SuccessiveKnownArray<uint64_t>();
+						else if (*typeID == typeid(int64_t))
+							GetInstance().SuccessiveKnownArray<int64_t>();
+						//else if (*typeID == typeid(double))
+						//	GetInstance().SuccessiveKnownArray<double>();
+						else
+							GetInstance().SuccessiveKnownArray<uint32_t>();
+					}
+				}
 			}
-			else
+			else //float, integral
 			{
-				if (isKnownValue)
-					GetInstance().SuccessiveKnown();
+				if (GetInstance()._iterationCount == 0)
+				{
+
+					if (isKnownValue)
+						GetInstance().InitialKnown();
+					else
+						GetInstance().InitialUnknown();
+				}
 				else
-					GetInstance().SuccessiveUnknown();
+				{
+					if (isKnownValue)
+						GetInstance().SuccessiveKnown();
+					else
+						GetInstance().SuccessiveUnknown();
+				}
 			}
+
+			
 
 			GetInstance().SetAndSaveResults();
 			++GetInstance()._iterationCount;
@@ -512,6 +648,14 @@ namespace Xertz
 		static std::vector<MemCompareResult<dataType, addressType>*>* GetResults()
 		{
 			return &GetInstance()._results;
+		}
+
+		static uint32_t GetValueItemCount()
+		{
+			if constexpr (std::is_integral_v<dataType> || std::is_floating_point_v<dataType>)
+				return 1;
+			else
+				return GetInstance()._knownValue.ItemCount();
 		}
 	};
 }
