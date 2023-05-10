@@ -16,6 +16,12 @@ namespace Xertz
 #define PROCESS_INFO Xertz::ProcessInfo
 #define PROCESS_INFO_LIST std::vector<Xertz::ProcessInfo>
 
+	template <typename T, template<typename...> class Template>
+	struct is_instantiation_of : std::false_type {};
+
+	template <template<typename...> class Template, typename... Args>
+	struct is_instantiation_of<Template<Args...>, Template> : std::true_type {};
+
 	enum StringDefs
 	{
 		NO_SUBSTRING = 0,
