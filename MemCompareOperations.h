@@ -27,8 +27,8 @@ namespace Xertz
 		std::function<bool(dataType&, dataType&, float&)> opPrecision;
 		std::function<bool(dataType&, dataType&, dataType&, float&)> opRangePrecision;
 
-		inline bool operator()(dataType currentVal, dataType oldOrKnown) const { return this->opSimple(currentVal, oldOrKnown); }
-		static inline bool equal(dataType currentVal, dataType oldOrKnown) { return currentVal == oldOrKnown; }
+		inline bool operator()(dataType& currentVal, dataType& oldOrKnown) const { return this->opSimple(currentVal, oldOrKnown); }
+		static inline bool equal(dataType& currentVal, dataType& oldOrKnown) { return currentVal == oldOrKnown; }
 		static inline bool not_equal(dataType currentVal, dataType oldOrKnown) { return currentVal != oldOrKnown; }
 		static inline bool lower(dataType currentVal, dataType oldOrKnown) { return currentVal < oldOrKnown; }
 		static inline bool lower_equal(dataType currentVal, dataType oldOrKnown) { return currentVal <= oldOrKnown; }
@@ -110,12 +110,6 @@ namespace Xertz
 				}
 				return fx;
 			}
-
-			/*
-			INCREASED_BY = 8,
-			DECREASED_BY = 9,
-			BETWEEN = 10,
-			NOT_BETWEEN = 11*/
 		}
 	};
 
