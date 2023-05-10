@@ -108,9 +108,35 @@ namespace Xertz
 			_hasAddresses = false;
 		}
 
+		void SetValueWidth(dataType* ptr)
+		{
+			if constexpr (std::is_integral_v<dataType> || std::is_floating_point_v<dataType>)
+				_valueWidth = sizeof(dataType);
+			else
+			{
+				const std::type_info* typeID = ptr->UnderlyingTypeID();
+				if (*typeID == typeid(uint8_t) || *typeID == typeid(int8_t))
+				{
+					_valueWidth = ptr->ItemCount();
+				}
+				else if (*typeID == typeid(uint16_t) || *typeID == typeid(int16_t))
+				{
+					_valueWidth = ptr->ItemCount() * 2;
+				}
+				else if (*typeID == typeid(uint64_t) || *typeID == typeid(int64_t) || *typeID == typeid(double))
+				{
+					_valueWidth = ptr->ItemCount() * 8;
+				}
+				else
+				{
+					_valueWidth = ptr->ItemCount() * 4;
+				}
+			}
+		}
+
 		void SetResultValues(dataType* ptr)
 		{
-			uint64_t size = _addressWidth * _resultCount;
+			uint64_t size = _valueWidth * _resultCount;
 			Deallocate((void*)_values);
 			_values = (dataType*)malloc(size);
 			memcpy(_values, ptr, size);
@@ -119,7 +145,7 @@ namespace Xertz
 
 		void SetResultPreviousValues(dataType* ptr)
 		{
-			uint64_t size = _addressWidth * _resultCount;
+			uint64_t size = _valueWidth * _resultCount;
 			Deallocate((void*)_previousValues);
 			_previousValues = (dataType*)malloc(size);
 			memcpy(_previousValues, ptr, size);
