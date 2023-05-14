@@ -1,3 +1,6 @@
 [submodule "OperativeArray"]
 	path = OperativeArray
 	url = https://github.com/CosmoCortney/OperativeArray.git
+[submodule "LitColor"]
+	path = LitColor
+	url = https://github.com/CosmoCortney/LitColor.git
