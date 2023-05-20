@@ -26,6 +26,7 @@ namespace Xertz
 		std::function<bool(dataType&, dataType&, dataType&)> opRange;
 		std::function<bool(dataType&, dataType&, float&)> opPrecision;
 		std::function<bool(dataType&, dataType&, dataType&, float&)> opRangePrecision;
+		std::function<bool(dataType&, dataType&, float&)> opColor;
 
 		inline bool operator()(dataType& currentVal, dataType& oldOrKnown) const { return this->opSimple(currentVal, oldOrKnown); }
 		static inline bool equal(dataType& currentVal, dataType& oldOrKnown) { return currentVal == oldOrKnown; }
@@ -46,7 +47,7 @@ namespace Xertz
 		static inline bool dummy_range(dataType x, dataType y, dataType z) { return false; }
 
 		inline bool operator()(dataType currentVal, dataType oldOrKnown, float precision, bool whatever) const { return this->opPrecision(currentVal, oldOrKnown, precision); } //bool is needed to make overload unique if 3rd parameter of opRange is a float
-		static inline bool equal_precision(dataType currentVal, dataType oldOrKnown, float precision) { return  currentVal >= oldOrKnown * precision && currentVal <= oldOrKnown * (2.0 - precision); } //0.01 = 1% accurate. 0.99 = 99% accurate
+		static inline bool equal_precision(dataType currentVal, dataType oldOrKnown, float precision) { return  currentVal >= oldOrKnown * (float)precision && currentVal <= oldOrKnown * (float)(2.0 - precision); } //0.01 = 1% accurate. 0.99 = 99% accurate
 		static inline bool not_equal_precision(dataType currentVal, dataType oldOrKnown, float precision) { return !equal_precision(currentVal, oldOrKnown, precision); }
 		static inline bool lower_precision(dataType currentVal, dataType oldOrKnown, float precision) { return currentVal < oldOrKnown * precision; }
 		static inline bool lower_equal_precision(dataType currentVal, dataType oldOrKnown, float precision) { return !greater_precision(currentVal, oldOrKnown, precision); }
@@ -61,56 +62,33 @@ namespace Xertz
 		static inline bool not_between_precision(dataType currentVal, dataType rangeMin, dataType RangeMax, float precision) { return lower_precision(currentVal, rangeMin, precision) && greater_precision(currentVal, RangeMax, precision); }
 		static inline bool dummy_range_precision(dataType x, dataType y, dataType z, float w) { return false; }
 
-		template<typename datatype> static CompareOperator<dataType>* GetCompareOperator(uint32_t condition, float precision = 1.0f)
+
+		inline bool operator()(LitColor& currentVal, LitColor& oldOrKnown, float precision) const { return this->opColor(currentVal, oldOrKnown, precision); }
+		static inline bool equal_color(LitColor& currentVal, LitColor& oldOrKnown, float precision)
+		{ 
+			if (!currentVal.HadValidColorSource())
+				return false;
+			return  currentVal >= oldOrKnown - (1.0f - precision) && currentVal <= oldOrKnown + (1.0f - precision);
+		} //0.01 = 1% accuracy. 0.99 = 99% accuracy
+
+		static inline bool not_equal_color(LitColor& currentVal, LitColor& oldOrKnown, float precision) { return !equal_color(currentVal, oldOrKnown, precision); }
+
+		static inline bool lower_color(LitColor& currentVal, LitColor& oldOrKnown, float precision)
 		{
-			CompareOperator<dataType> fx;
-
-			if constexpr (std::is_floating_point<datatype>)
-			{
-				if (precision > 0.99f)
-				{
-					switch (condition)
-					{
-					case Xertz::EQUAL: fx.op = CompareOperator<dataType>::equal; break;
-					case Xertz::UNEQUAL: fx.op = CompareOperator<dataType>::not_equal; break;
-					case Xertz::GREATER: fx.op = CompareOperator<dataType>::greater; break;
-					case Xertz::GREATER_EQUAL: fx.op = CompareOperator<dataType>::greater_equal; break;
-					case Xertz::LOWER: fx.op = CompareOperator<dataType>::lower; break;
-					case Xertz::LOWER_EQUAL: fx.op = CompareOperator<dataType>::lower_equal; break;
-					default: fx.op = functor<dataType>::dummy; break;
-					}
-					return fx;
-				}
-
-				switch (condition)
-				{
-				case Xertz::EQUAL: fx.opPrecision = CompareOperator<dataType>::equal_precision; break;
-				case Xertz::UNEQUAL: fx.opPrecision = CompareOperator<dataType>::not_equal_precision; break;
-				case Xertz::GREATER: fx.opPrecision = CompareOperator<dataType>::greater_precision; break;
-				case Xertz::GREATER_EQUAL: fx.opPrecision = CompareOperator<dataType>::greater_equal_precision; break;
-				case Xertz::LOWER: fx.opPrecision = CompareOperator<dataType>::lower_precision; break;
-				case Xertz::LOWER_EQUAL: fx.opPrecision = CompareOperator<dataType>::lower_equal_precision; break;
-				default: fx.opPrecision = functor<dataType>::dummy_precision; break;
-				}
-				return fx;
-			}
-
-			if constexpr (std::is_integral_v<datatype>)
-			{
-				switch (condition)
-				{
-				case Xertz::EQUAL: fx.op = CompareOperator<dataType>::equal; break;
-				case Xertz::UNEQUAL: fx.op = CompareOperator<dataType>::not_equal; break;
-				case Xertz::GREATER: fx.op = CompareOperator<dataType>::greater; break;
-				case Xertz::GREATER_EQUAL: fx.op = CompareOperator<dataType>::greater_equal; break;
-				case Xertz::LOWER: fx.op = CompareOperator<dataType>::lower; break;
-				case Xertz::LOWER_EQUAL: fx.op = CompareOperator<dataType>::lower_equal; break;
-				case Xertz::AND: fx.op = CompareOperator<dataType>::And; break;
-				case Xertz::OR: fx.op = CompareOperator<dataType>::Or; break;
-				}
-				return fx;
-			}
+			if (!currentVal.HadValidColorSource())
+				return false;
+			return currentVal < oldOrKnown + (1.0f - precision);
 		}
+
+		static inline bool lower_equal_color(LitColor& currentVal, LitColor& oldOrKnown, float precision) { return !greater_color(currentVal, oldOrKnown, precision); }
+
+		static inline bool greater_color(LitColor& currentVal, LitColor& oldOrKnown, float precision)
+		{
+			if (!currentVal.HadValidColorSource())
+				return false;
+			return currentVal > oldOrKnown - (1.0f - precision);
+		}
+		static inline bool greater_equal_color(LitColor& currentVal, LitColor& oldOrKnown, float precision) { return !lower_color(currentVal, oldOrKnown, precision); }
 	};
 
 }

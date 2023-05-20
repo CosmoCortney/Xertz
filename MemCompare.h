@@ -36,10 +36,10 @@ namespace Xertz
 		uint64_t _resultCount = 0;
 		std::wstring _dumpDir = L"";
 		bool _swapBytes = false;
-		dataType _knownValue = (dataType)0;
-		dataType _secondaryKnownValue = (dataType)0;
+		dataType _knownValue;
+		dataType _secondaryKnownValue;
 		uint32_t _condition = 0;
-		CompareOperator<dataType> _comparisionOperator = nullptr;
+		CompareOperator<dataType> _comparisonOperator = nullptr;
 		float _precision = 0.0f;
 		int _valueSizeFactor = 1;
 		addressType* _addresses = nullptr;
@@ -77,7 +77,7 @@ namespace Xertz
 						dataType val = *(dataType*)((uint8_t*)_results[_iterationCount - 1]->GetResultValues() + i * _alignment);
 						dataType readVal = _byteReader(*(dataType*)(_currentDump.GetDump<uint8_t*>() + addr));
 
-						if (_comparisionOperator(readVal, val, _knownValue))
+						if (_comparisonOperator(readVal, val, _knownValue))
 						{
 							*(_addresses + _resultCount) = addr;
 							*(_values + _resultCount) = readVal;
@@ -94,7 +94,7 @@ namespace Xertz
 						dataType val = *(dataType*)((uint8_t*)_results[_iterationCount - 1]->GetResultValues() + i * _alignment);
 						dataType readVal = _byteReader(*(dataType*)(_currentDump.GetDump<uint8_t*>() + addr));
 
-						if (_comparisionOperator(readVal, val, _precision, false))
+						if (_comparisonOperator(readVal, val, _precision, false))
 						{
 							*(_addresses + _resultCount) = addr;
 							*(_values + _resultCount) = readVal;
@@ -114,7 +114,7 @@ namespace Xertz
 						dataType val = *(dataType*)((uint8_t*)_results[_iterationCount - 1]->GetResultValues() + i * _alignment);
 						dataType readVal = _byteReader(*(dataType*)(_currentDump.GetDump<uint8_t*>() + addr));
 
-						if (_comparisionOperator(readVal, val))
+						if (_comparisonOperator(readVal, val))
 						{
 							*(_addresses + _resultCount) = addr;
 							*(_values + _resultCount) = readVal;
@@ -131,7 +131,7 @@ namespace Xertz
 						dataType val = *(dataType*)((uint8_t*)_results[_iterationCount - 1]->GetResultValues() + i * _alignment);
 						dataType readVal = _byteReader(*(dataType*)(_currentDump.GetDump<uint8_t*>() + addr));
 
-						if (_comparisionOperator(readVal, val, _precision, false))
+						if (_comparisonOperator(readVal, val, _precision, false))
 						{
 							*(_addresses + _resultCount) = addr;
 							*(_values + _resultCount) = readVal;
@@ -153,7 +153,7 @@ namespace Xertz
 					{
 						dataType readVal = _byteReader(*(dataType*)(_currentDump.GetDump<uint8_t*>() + offsetDump));
 
-						if (_comparisionOperator(readVal, _knownValue, _secondaryKnownValue))
+						if (_comparisonOperator(readVal, _knownValue, _secondaryKnownValue))
 						{
 							*(_addresses + _resultCount) = offsetDump;
 							*(_values + _resultCount) = readVal;
@@ -167,7 +167,7 @@ namespace Xertz
 					{
 						dataType readVal = _byteReader(*(dataType*)(_currentDump.GetDump<uint8_t*>() + offsetDump));
 
-						if (_comparisionOperator(readVal, _knownValue, _precision, false))
+						if (_comparisonOperator(readVal, _knownValue, _precision, false))
 						{
 							*(_addresses + _resultCount) = offsetDump;
 							*(_values + _resultCount) = readVal;
@@ -184,7 +184,7 @@ namespace Xertz
 					{
 						dataType readVal = _byteReader(*(dataType*)(_currentDump.GetDump<uint8_t*>() + offsetDump));
 
-						if (_comparisionOperator(readVal, _knownValue))
+						if (_comparisonOperator(readVal, _knownValue))
 						{
 							*(_addresses + _resultCount) = offsetDump;
 							*(_values + _resultCount) = readVal;
@@ -198,7 +198,7 @@ namespace Xertz
 					{
 						dataType readVal = _byteReader(*(dataType*)(_currentDump.GetDump<uint8_t*>() + offsetDump));
 
-						if (_comparisionOperator(readVal, _knownValue, _precision, false))
+						if (_comparisonOperator(readVal, _knownValue, _precision, false))
 						{
 							*(_addresses + _resultCount) = offsetDump;
 							*(_values + _resultCount) = readVal;
@@ -208,7 +208,138 @@ namespace Xertz
 				}
 			}
 		}
-		
+
+		void InitialKnownRGBA()
+		{
+			LitColor readValue;
+			readValue.SelectType(_knownValue.GetSelectedType());
+			DataAccess<uint32_t> byteReader;
+			byteReader.reader = _swapBytes ? DataAccess<uint32_t>::readReversed : DataAccess<uint32_t>::read;
+
+			for (uint64_t offsetDump = 0; offsetDump < _dumpSize; offsetDump += _alignment)
+			{
+				readValue = byteReader(*(uint32_t*)(_currentDump.GetDump<uint8_t*>() + offsetDump));
+					  
+				if (_comparisonOperator(readValue, _knownValue, _precision))
+				{
+					*(_addresses + _resultCount) = offsetDump;
+					*((uint32_t*)_values + _resultCount) = readValue.GetRGBA();
+					*((uint32_t*)_previousValues + _resultCount) = 0;
+					++_resultCount;
+				}
+			}
+		}
+
+		void SuccessiveKnownRGBA()
+		{
+			LitColor readValue;
+			DataAccess<uint32_t> byteReader;
+			byteReader.reader = _swapBytes ? DataAccess<uint32_t>::readReversed : DataAccess<uint32_t>::read;
+
+			for (uint64_t i = 0; i < _results[_iterationCount - 1]->GetResultCount(); ++i)
+			{
+				uint64_t readOffset = *(_results[_iterationCount - 1]->GetResultOffsets() + i);
+				readValue = byteReader(*(uint32_t*)(_currentDump.GetDump<uint8_t*>() + readOffset));
+
+				if (_comparisonOperator(readValue, _knownValue, _precision))
+				{
+					*(_addresses + _resultCount) = *(_results[_iterationCount - 1]->GetResultOffsets() + i);
+					*((uint32_t*)_values + _resultCount) = readValue.GetRGBA();
+					*((uint32_t*)_previousValues + _resultCount) = *(((uint32_t*)_results[_iterationCount - 1]->GetResultValues() + i));
+					++_resultCount;
+				}
+			}
+		}
+
+		void InitialKnownRGB565()
+		{
+			LitColor readValue;
+			readValue.SelectType(_knownValue.GetSelectedType());
+			DataAccess<uint16_t> byteReader;
+			byteReader.reader = _swapBytes ? DataAccess<uint16_t>::readReversed : DataAccess<uint16_t>::read;
+
+			for (uint64_t offsetDump = 0; offsetDump < _dumpSize; offsetDump += _alignment)
+			{
+				readValue = byteReader(*(uint16_t*)(_currentDump.GetDump<uint8_t*>() + offsetDump));
+
+				if (_comparisonOperator(readValue, _knownValue, _precision))
+				{
+					*(_addresses + _resultCount) = offsetDump;
+					*((uint16_t*)_values + _resultCount) = readValue.GetRGB565();
+					*((uint16_t*)_previousValues + _resultCount) = 0;
+					++_resultCount;
+				}
+			}
+		}
+
+		void SuccessiveKnownRGB565()
+		{
+			LitColor readValue;
+			DataAccess<uint16_t> byteReader;
+			byteReader.reader = _swapBytes ? DataAccess<uint16_t>::readReversed : DataAccess<uint16_t>::read;
+
+			for (uint64_t i = 0; i < _results[_iterationCount - 1]->GetResultCount(); ++i)
+			{
+				uint64_t readOffset = *(_results[_iterationCount - 1]->GetResultOffsets() + i);
+				readValue = byteReader(*(uint16_t*)(_currentDump.GetDump<uint8_t*>() + readOffset));
+
+				if (_comparisonOperator(readValue, _knownValue, _precision))
+				{
+					*(_addresses + _resultCount) = *(_results[_iterationCount - 1]->GetResultOffsets() + i);
+					*((uint16_t*)_values + _resultCount) = readValue.GetRGB565();
+					*((uint16_t*)_previousValues + _resultCount) = *(((uint16_t*)_results[_iterationCount - 1]->GetResultValues() + i));
+					++_resultCount;
+				}
+			}
+		}
+
+		void InitialKnownRGBAF()
+		{
+			LitColor readValue;
+			readValue.SelectType(_knownValue.GetSelectedType());
+			DataAccess<float> byteReader;
+			byteReader.reader = _swapBytes ? DataAccess<float>::readReversed : DataAccess<float>::read;
+			int colorValueCount = (_knownValue.UsesAlpha() ? 4 : 3);
+
+			for (uint64_t offsetDump = 0; offsetDump < _dumpSize - 2*sizeof(float); offsetDump += _alignment)
+			{
+				for(int rgbaSelect = 0; rgbaSelect < colorValueCount; ++rgbaSelect)
+					readValue.SetColorValue<float>( byteReader(*(float*)(_currentDump.GetDump<uint8_t*>() + offsetDump + rgbaSelect * sizeof(float))), rgbaSelect);
+
+				if (_comparisonOperator(readValue, _knownValue, _precision))
+				{
+					*(_addresses + _resultCount) = offsetDump;
+					for (int rgbaSelect = 0; rgbaSelect < colorValueCount; ++rgbaSelect)
+					{
+						*((float*)_values + _resultCount * colorValueCount + rgbaSelect) = readValue.GetColorValue<float>(rgbaSelect);
+						*((float*)_previousValues + _resultCount * colorValueCount + rgbaSelect) = 0;
+					}
+					++_resultCount;
+				}
+			}
+		}
+
+		void SuccessiveKnownRGBAF()
+		{
+			LitColor readValue;
+			DataAccess<uint32_t> byteReader;
+			byteReader.reader = _swapBytes ? DataAccess<uint32_t>::readReversed : DataAccess<uint32_t>::read;
+
+			for (uint64_t i = 0; i < _results[_iterationCount - 1]->GetResultCount(); ++i)
+			{
+				uint64_t readOffset = *(_results[_iterationCount - 1]->GetResultOffsets() + i);
+				readValue = byteReader(*(uint32_t*)(_currentDump.GetDump<uint8_t*>() + readOffset));
+
+				if (_comparisonOperator(readValue, _knownValue, _precision))
+				{
+					*(_addresses + _resultCount) = *(_results[_iterationCount - 1]->GetResultOffsets() + i);
+					*((uint32_t*)_values + _resultCount) = readValue.GetRGBA();
+					*((uint32_t*)_previousValues + _resultCount) = *(((uint32_t*)_results[_iterationCount - 1]->GetResultValues() + i));
+					++_resultCount;
+				}
+			}
+		}
+
 		template <typename arrayType> void InitialKnownArray()
 		{
 			uint32_t itemCount = _knownValue.ItemCount();
@@ -223,7 +354,7 @@ namespace Xertz
 					readArr[index] = byteReader(*(arrayType*)(_currentDump.GetDump<uint8_t*>() + offsetDump + index*sizeof(arrayType)));
 				}
 
-				if (_comparisionOperator(_knownValue, readArr/*, _precision, false*/))
+				if (_comparisonOperator(_knownValue, readArr/*, _precision, false*/))
 				{
 					*(_addresses + _resultCount) = offsetDump;
 
@@ -254,7 +385,7 @@ namespace Xertz
 					readArr[index] = byteReader(*(arrayType*)(_currentDump.GetDump<uint8_t*>() + readOffset + index * sizeof(arrayType)));
 				}
 
-				if (_comparisionOperator(_knownValue, readArr/*, _precision, false*/))
+				if (_comparisonOperator(_knownValue, readArr/*, _precision, false*/))
 				{
 					*(_addresses + _resultCount) = *(_results[_iterationCount - 1]->GetResultOffsets() + i);
 
@@ -280,7 +411,7 @@ namespace Xertz
 						uint64_t readOffset = *(_results[_iterationCount - 1]->GetResultOffsets() + i);
 						dataType readVal = _byteReader(*(dataType*)(_currentDump.GetDump<uint8_t*>() + readOffset));
 
-						if (_comparisionOperator(readVal, _knownValue, _secondaryKnownValue))
+						if (_comparisonOperator(readVal, _knownValue, _secondaryKnownValue))
 						{
 							*(_addresses + _resultCount) = *(_results[_iterationCount - 1]->GetResultOffsets() + i);
 							*(_values + _resultCount) = readVal;
@@ -296,7 +427,7 @@ namespace Xertz
 						uint64_t readOffset = *(_results[_iterationCount - 1]->GetResultOffsets() + i);
 						dataType readVal = _byteReader(*(dataType*)(_currentDump.GetDump<uint8_t*>() + readOffset));
 
-						if (_comparisionOperator(readVal, _knownValue, _precision, false))
+						if (_comparisonOperator(readVal, _knownValue, _precision, false))
 						{
 							*(_addresses + _resultCount) = *(_results[_iterationCount - 1]->GetResultOffsets() + i);
 							*(_values + _resultCount) = readVal;
@@ -315,7 +446,7 @@ namespace Xertz
 						uint64_t readOffset = *(_results[_iterationCount - 1]->GetResultOffsets() + i);
 						dataType readVal = _byteReader(*(dataType*)(_currentDump.GetDump<uint8_t*>() + readOffset));
 
-						if (_comparisionOperator(readVal, _knownValue))
+						if (_comparisonOperator(readVal, _knownValue))
 						{
 							*(_addresses + _resultCount) = *(_results[_iterationCount - 1]->GetResultOffsets() + i);
 							*(_values + _resultCount) = readVal;
@@ -331,7 +462,7 @@ namespace Xertz
 						uint64_t readOffset = *(_results[_iterationCount - 1]->GetResultOffsets() + i);
 						dataType readVal = _byteReader(*(dataType*)(_currentDump.GetDump<uint8_t*>() + readOffset));
 
-						if (_comparisionOperator(readVal, _knownValue, _precision, false))
+						if (_comparisonOperator(readVal, _knownValue, _precision, false))
 						{
 							*(_addresses + _resultCount) = *(_results[_iterationCount - 1]->GetResultOffsets() + i);
 							*(_values + _resultCount) = readVal;
@@ -375,7 +506,7 @@ namespace Xertz
 			_currentDump = Xertz::SystemInfo::GetProcessInfo(_pid).DumpMemory(_dumpAddress, _dumpSize);
 			_addresses = (addressType*)malloc(_dumpSize * sizeof(addressType));
 
-			if constexpr (!std::is_integral_v<dataType> && !std::is_floating_point_v<dataType>)
+			if constexpr (is_instantiation_of<dataType, OperativeArray>::value)
 			{
 				const std::type_info* typeID = _knownValue.UnderlyingTypeID();
 				if (*typeID == typeid(uint8_t))
@@ -393,7 +524,24 @@ namespace Xertz
 
 				_valueSizeFactor *= _knownValue.ItemCount();
 			}
-			else// float, integral
+			else if constexpr (std::is_same_v<dataType, LitColor>)
+			{
+				switch (_knownValue.GetSelectedType())
+				{
+				case LitColor::RGBF:
+					_valueSizeFactor = 12;
+					break;
+				case LitColor::RGBAF:
+					_valueSizeFactor = 16;
+					break;
+				case LitColor::RGB565:
+					_valueSizeFactor = 2;
+					break;
+				default: //RGB888, RGBA8888
+					_valueSizeFactor = 4;
+				}
+			}
+			else if constexpr(std::is_integral_v<dataType> || std::is_floating_point_v<dataType>)
 			{
 				_valueSizeFactor = sizeof(dataType);
 				_byteReader.reader = _swapBytes ? DataAccess<dataType>::readReversed : DataAccess<dataType>::read;
@@ -409,95 +557,107 @@ namespace Xertz
 			{
 			case EQUAL:
 				if constexpr (std::is_floating_point_v<dataType>)
-					_comparisionOperator.opPrecision = CompareOperator<dataType>::equal_precision;
+					_comparisonOperator.opPrecision = CompareOperator<dataType>::equal_precision;
+				else if constexpr (std::is_same_v<dataType, LitColor>)
+					_comparisonOperator.opColor = CompareOperator<dataType>::equal_color;
 				else// if constexpr (std::is_integral_v<dataType>)
-					_comparisionOperator.opSimple = CompareOperator<dataType>::equal;
+					_comparisonOperator.opSimple = CompareOperator<dataType>::equal;
 				break;
 			case UNEQUAL:
 				if constexpr (std::is_floating_point_v<dataType>)
-					_comparisionOperator.opPrecision = CompareOperator<dataType>::not_equal_precision;
+					_comparisonOperator.opPrecision = CompareOperator<dataType>::not_equal_precision;
+				else if constexpr (std::is_same_v<dataType, LitColor>)
+					_comparisonOperator.opColor = CompareOperator<dataType>::not_equal_color;
 				else// if constexpr (std::is_integral_v<dataType>)
-					_comparisionOperator.opSimple = CompareOperator<dataType>::not_equal;
+					_comparisonOperator.opSimple = CompareOperator<dataType>::not_equal;
 				break;
 			case LOWER:
 				if constexpr (std::is_floating_point_v<dataType>)
-					_comparisionOperator.opPrecision = CompareOperator<dataType>::lower_precision;
+					_comparisonOperator.opPrecision = CompareOperator<dataType>::lower_precision;
 				else if constexpr (std::is_integral_v<dataType>)
-					_comparisionOperator.opSimple = CompareOperator<dataType>::lower;
+					_comparisonOperator.opSimple = CompareOperator<dataType>::lower;
+				else if constexpr (std::is_same_v<dataType, LitColor>)
+					_comparisonOperator.opColor = CompareOperator<dataType>::lower_color;
 				else //OperativeArray
-					_comparisionOperator.opSimple = CompareOperator<dataType>::dummy;
+					_comparisonOperator.opSimple = CompareOperator<dataType>::dummy;
 				break;
 			case LOWER_EQUAL:
 				if constexpr (std::is_floating_point_v<dataType>)
-					_comparisionOperator.opPrecision = CompareOperator<dataType>::lower_equal_precision;
+					_comparisonOperator.opPrecision = CompareOperator<dataType>::lower_equal_precision;
 				else if constexpr (std::is_integral_v<dataType>)
-				_comparisionOperator.opSimple = CompareOperator<dataType>::lower_equal;
+				_comparisonOperator.opSimple = CompareOperator<dataType>::lower_equal;
+				else if constexpr (std::is_same_v<dataType, LitColor>)
+					_comparisonOperator.opColor = CompareOperator<dataType>::lower_equal_color;
 				else //OperativeArray
-					_comparisionOperator.opSimple = CompareOperator<dataType>::dummy;
+					_comparisonOperator.opSimple = CompareOperator<dataType>::dummy;
 				break;
 			case GREATER:
 				if constexpr (std::is_floating_point_v<dataType>)
-					_comparisionOperator.opPrecision = CompareOperator<dataType>::greater_precision;
+					_comparisonOperator.opPrecision = CompareOperator<dataType>::greater_precision;
 				else if constexpr (std::is_integral_v<dataType>)
-					_comparisionOperator.opSimple = CompareOperator<dataType>::greater;
+					_comparisonOperator.opSimple = CompareOperator<dataType>::greater;
+				else if constexpr (std::is_same_v<dataType, LitColor>)
+					_comparisonOperator.opColor = CompareOperator<dataType>::greater_color;
 				else //OperativeArray
-					_comparisionOperator.opSimple = CompareOperator<dataType>::dummy;
+					_comparisonOperator.opSimple = CompareOperator<dataType>::dummy;
 				break;
 			case GREATER_EQUAL:
 				if constexpr (std::is_floating_point_v<dataType>)
-					_comparisionOperator.opPrecision = CompareOperator<dataType>::greater_equal_precision;
+					_comparisonOperator.opPrecision = CompareOperator<dataType>::greater_equal_precision;
 				else if constexpr (std::is_integral_v<dataType>)
-					_comparisionOperator.opSimple = CompareOperator<dataType>::greater_equal;
+					_comparisonOperator.opSimple = CompareOperator<dataType>::greater_equal;
+				else if constexpr (std::is_same_v<dataType, LitColor>)
+					_comparisonOperator.opColor = CompareOperator<dataType>::greater_equal_color;
 				else //OperativeArray
-					_comparisionOperator.opSimple = CompareOperator<dataType>::dummy;
+					_comparisonOperator.opSimple = CompareOperator<dataType>::dummy;
 				break;
 			case AND:
 				if constexpr (std::is_integral_v<dataType>)
-					_comparisionOperator.opSimple = CompareOperator<dataType>::And;
+					_comparisonOperator.opSimple = CompareOperator<dataType>::And;
 				else
-					_comparisionOperator.opSimple = CompareOperator<dataType>::dummy;
+					_comparisonOperator.opSimple = CompareOperator<dataType>::dummy;
 				break;
 			case OR:
 				if constexpr (std::is_integral_v<dataType>)
-					_comparisionOperator.opSimple = CompareOperator<dataType>::Or;
+					_comparisonOperator.opSimple = CompareOperator<dataType>::Or;
 				else
-					_comparisionOperator.opSimple = CompareOperator<dataType>::dummy;
+					_comparisonOperator.opSimple = CompareOperator<dataType>::dummy;
 				break;
 			case INCREASED_BY:
 				if constexpr (std::is_floating_point_v<dataType>)
-					_comparisionOperator.opRangePrecision = CompareOperator<dataType>::increased_precision;
+					_comparisonOperator.opRangePrecision = CompareOperator<dataType>::increased_precision;
 				else if constexpr (std::is_floating_point_v<dataType>)
-					_comparisionOperator.opRange = CompareOperator<dataType>::increased;
+					_comparisonOperator.opRange = CompareOperator<dataType>::increased;
 				else //OperativeArray
-					_comparisionOperator.opRange = CompareOperator<dataType>::dummy_range;
+					_comparisonOperator.opRange = CompareOperator<dataType>::dummy_range;
 				break;
 			case DECREASED_BY:
 				if constexpr (std::is_floating_point_v<dataType>)
-				_comparisionOperator.opRangePrecision = CompareOperator<dataType>::decreased_precision;
+				_comparisonOperator.opRangePrecision = CompareOperator<dataType>::decreased_precision;
 				else if constexpr (std::is_floating_point_v<dataType>)
-					_comparisionOperator.opRange = CompareOperator<dataType>::decreased;
+					_comparisonOperator.opRange = CompareOperator<dataType>::decreased;
 				else //OperativeArray
-					_comparisionOperator.opRange = CompareOperator<dataType>::dummy_range;
+					_comparisonOperator.opRange = CompareOperator<dataType>::dummy_range;
 				break;
 			case BETWEEN:
 				if constexpr (std::is_floating_point_v<dataType>)
-				_comparisionOperator.opRangePrecision = CompareOperator<dataType>::between_precision;
+				_comparisonOperator.opRangePrecision = CompareOperator<dataType>::between_precision;
 				else if constexpr (std::is_floating_point_v<dataType>)
-					_comparisionOperator.opRange = CompareOperator<dataType>::between;
+					_comparisonOperator.opRange = CompareOperator<dataType>::between;
 				else //OperativeArray
-					_comparisionOperator.opRange = CompareOperator<dataType>::dummy_range;
+					_comparisonOperator.opRange = CompareOperator<dataType>::dummy_range;
 				break;
 			case NOT_BETWEEN:
 				if constexpr (std::is_floating_point_v<dataType>)
-				_comparisionOperator.opRangePrecision = CompareOperator<dataType>::not_between_precision;
+				_comparisonOperator.opRangePrecision = CompareOperator<dataType>::not_between_precision;
 				else if constexpr (std::is_floating_point_v<dataType>)
-					_comparisionOperator.opRange = CompareOperator<dataType>::not_between;
+					_comparisonOperator.opRange = CompareOperator<dataType>::not_between;
 				else //OperativeArray
-					_comparisionOperator.opRange = CompareOperator<dataType>::dummy_range;
+					_comparisonOperator.opRange = CompareOperator<dataType>::dummy_range;
 				break;
 
 			default:
-				_comparisionOperator.opSimple = CompareOperator<dataType>::dummy;
+				_comparisonOperator.opSimple = CompareOperator<dataType>::dummy;
 				break;
 			}
 		}
@@ -512,13 +672,13 @@ namespace Xertz
 			return GetInstance().Iterate(dumpAddress, dumpSize, condition, isKnownValue, precision, dummyVal, dummyVal2);
 		}
 
-		static uint64_t Iterate(void* dumpAddress, uint64_t dumpSize, int32_t condition, bool isKnownValue, float precision, dataType& knownValue)
+		static uint64_t Iterate(void* dumpAddress, uint64_t dumpSize, int32_t condition, bool isKnownValue, float precision, const dataType knownValue)
 		{
 			dataType dummyVal;
 			return GetInstance().Iterate(dumpAddress, dumpSize, condition, isKnownValue, precision, knownValue, dummyVal);
 		}
 
-		static uint64_t Iterate(void* dumpAddress, uint64_t dumpSize, int32_t condition, bool isKnownValue, float precision, dataType& knownValue, dataType& secondaryKnownValue)
+		static uint64_t Iterate(void* dumpAddress, uint64_t dumpSize, int32_t condition, bool isKnownValue, float precision, const dataType knownValue, const dataType secondaryKnownValue)
 		{
 			GetInstance()._resultCount = 0;
 			GetInstance()._knownValue = knownValue;
@@ -588,6 +748,41 @@ namespace Xertz
 					}
 				}
 			}
+			else if constexpr (std::is_same_v<LitColor, dataType>)
+			{
+				int colorType = GetInstance()._knownValue.GetSelectedType();
+				if (GetInstance()._iterationCount == 0)
+				{
+					if (isKnownValue)
+					{
+						switch (colorType)
+						{
+						case LitColor::RGBAF:
+						case LitColor::RGBF:
+							GetInstance().InitialKnownRGBAF();
+							break;
+						case LitColor::RGB565:
+								GetInstance().InitialKnownRGB565();
+						default: //RGB888, RGBA8888
+							GetInstance().InitialKnownRGBA();
+						}
+					}
+				}
+				else
+				{
+					switch (colorType)
+					{
+					case LitColor::RGBAF:
+					case LitColor::RGBF:
+						GetInstance().SuccessiveKnownRGBAF();
+						break;
+					case LitColor::RGB565:
+						GetInstance().SuccessiveKnownRGB565();
+					default: //RGB888, RGBA8888
+						GetInstance().SuccessiveKnownRGBA();
+					}
+				}
+			}
 			else //float, integral
 			{
 				if (GetInstance()._iterationCount == 0)
@@ -632,7 +827,7 @@ namespace Xertz
 			GetInstance()._knownValue = (dataType)0;
 			GetInstance()._secondaryKnownValue = (dataType)0;
 			GetInstance()._condition = 0;
-			GetInstance()._comparisionOperator = nullptr;
+			GetInstance()._comparisonOperator = nullptr;
 		}
 
 		static void SetUp(int pid, std::wstring& dir, bool cached, bool swapByptes, int alignment)

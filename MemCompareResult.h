@@ -4,6 +4,7 @@
 #include<functional>
 #include<iostream>
 #include"OperativeArray.h"
+#include"LitColor.h"
 
 namespace Xertz
 {
@@ -110,9 +111,27 @@ namespace Xertz
 
 		void SetValueWidth(dataType* ptr)
 		{
-			if constexpr (std::is_integral_v<dataType> || std::is_floating_point_v<dataType>)
-				_valueWidth = sizeof(dataType);
-			else
+			if constexpr (std::is_same_v<dataType, LitColor>)
+			{
+				switch (ptr->GetSelectedType())
+				{
+				case LitColor::RGB888:
+					_valueWidth = 3;
+					break;
+				case LitColor::RGBF:
+					_valueWidth = 12;
+					break;
+				case LitColor::RGBAF:
+					_valueWidth = 16;
+					break;
+				case LitColor::RGB565:
+					_valueWidth = 2;
+					break;
+				default: //RGBA8888
+					_valueWidth = 4;
+				}
+			}
+			else if constexpr (is_instantiation_of<dataType, OperativeArray>::value)
 			{
 				const std::type_info* typeID = ptr->UnderlyingTypeID();
 				if (*typeID == typeid(uint8_t) || *typeID == typeid(int8_t))
@@ -132,6 +151,8 @@ namespace Xertz
 					_valueWidth = ptr->ItemCount() * 4;
 				}
 			}
+			else //integral, float types
+				_valueWidth = sizeof(dataType);
 		}
 
 		void SetResultValues(dataType* ptr)

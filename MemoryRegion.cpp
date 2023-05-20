@@ -11,4 +11,3 @@ Xertz::MemoryRegion::MemoryRegion(uint64_t baseAddress, uint64_t allocationBase,
 	_type = type;
 	_partitionId = partitionId;
 }
-
