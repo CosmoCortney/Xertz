@@ -224,7 +224,6 @@ namespace Xertz
 				{
 					*(_addresses + _resultCount) = offsetDump;
 					*((uint32_t*)_values + _resultCount) = readValue.GetRGBA();
-					*((uint32_t*)_previousValues + _resultCount) = 0;
 					++_resultCount;
 				}
 			}
@@ -266,7 +265,6 @@ namespace Xertz
 				{
 					*(_addresses + _resultCount) = offsetDump;
 					*((uint16_t*)_values + _resultCount) = readValue.GetRGB565();
-					*((uint16_t*)_previousValues + _resultCount) = 0;
 					++_resultCount;
 				}
 			}
@@ -312,7 +310,6 @@ namespace Xertz
 					for (int rgbaSelect = 0; rgbaSelect < colorValueCount; ++rgbaSelect)
 					{
 						*((float*)_values + _resultCount * colorValueCount + rgbaSelect) = readValue.GetColorValue<float>(rgbaSelect);
-						*((float*)_previousValues + _resultCount * colorValueCount + rgbaSelect) = 0;
 					}
 					++_resultCount;
 				}
@@ -354,7 +351,7 @@ namespace Xertz
 					readArr[index] = byteReader(*(arrayType*)(_currentDump.GetDump<uint8_t*>() + offsetDump + index*sizeof(arrayType)));
 				}
 
-				if (_comparisonOperator(_knownValue, readArr/*, _precision, false*/))
+				if (_comparisonOperator(_knownValue, readArr))
 				{
 					*(_addresses + _resultCount) = offsetDump;
 
@@ -363,7 +360,6 @@ namespace Xertz
 						*((arrayType*)_values + _resultCount * itemCount + index) = readArr[index];
 						*((arrayType*)_previousValues + _resultCount * itemCount + index) = 0;
 					}
-
 					++_resultCount;
 				}
 			}
@@ -385,7 +381,7 @@ namespace Xertz
 					readArr[index] = byteReader(*(arrayType*)(_currentDump.GetDump<uint8_t*>() + readOffset + index * sizeof(arrayType)));
 				}
 
-				if (_comparisonOperator(_knownValue, readArr/*, _precision, false*/))
+				if (_comparisonOperator(_knownValue, readArr))
 				{
 					*(_addresses + _resultCount) = *(_results[_iterationCount - 1]->GetResultOffsets() + i);
 
@@ -394,7 +390,6 @@ namespace Xertz
 						*((arrayType*)_values + _resultCount * itemCount + index) = readArr[index];
 						*((arrayType*)_previousValues + _resultCount * itemCount + index) = *((arrayType*)(_results[_iterationCount - 1]->GetResultValues()) + _resultCount * itemCount + index);
 					}
-
 					++_resultCount;
 				}
 			}
