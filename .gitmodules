@@ -4,3 +4,6 @@
 [submodule "LitColor"]
 	path = LitColor
 	url = https://github.com/CosmoCortney/LitColor.git
+[submodule "MorphText"]
+	path = MorphText
+	url = https://github.com/CosmoCortney/MorphText.git
