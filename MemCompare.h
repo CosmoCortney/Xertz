@@ -291,6 +291,52 @@ namespace Xertz
 			}
 		}
 
+		void InitialKnownText()
+		{
+			int format = _knownValue.GetPrimaryFormat();
+			int stringLength = 0;
+
+			switch (format)
+			{
+			case MorphText::SHIFTJIS: {
+				char* buf = new char[_valueSizeFactor];
+				buf[_valueSizeFactor - 1] = '\0';
+
+				for (uint64_t offsetDump = 0; offsetDump < _dumpSize; offsetDump += _alignment)
+				{
+					memcpy(buf, _currentDump.GetDump<char*>() + offsetDump, _valueSizeFactor - 1);
+					if (_knownValue.Compare(buf, true, format))
+					{
+						*(_addresses + _resultCount) = offsetDump;
+						std::memcpy(((char*)_values) + _resultCount * _valueSizeFactor, buf, _valueSizeFactor);
+						++_resultCount;
+					}
+				}
+
+				delete[] buf;
+			} break;
+			default: //ASCII
+			{
+				char* buf = new char[_valueSizeFactor];
+				buf[_valueSizeFactor-1] = '\0';
+
+				for (uint64_t offsetDump = 0; offsetDump < _dumpSize; offsetDump += _alignment)
+				{
+					memcpy(buf, _currentDump.GetDump<char*>() + offsetDump, _valueSizeFactor - 1);
+					if (_knownValue.Compare(buf, format))
+					{
+						*(_addresses + _resultCount) = offsetDump;
+						std::memcpy(((char*)_values) + _resultCount * _valueSizeFactor, buf, _valueSizeFactor);
+						++_resultCount;
+					}
+				}
+
+				delete[] buf;
+			}
+
+			}
+		}
+
 		void InitialKnownRGBAF()
 		{
 			LitColor readValue;
@@ -536,6 +582,22 @@ namespace Xertz
 					_valueSizeFactor = 4;
 				}
 			}
+			else if constexpr (std::is_same_v<dataType, MorphText>)
+			{
+				switch (_knownValue.GetPrimaryFormat())
+				{
+				case MorphText::ASCII:
+					_valueSizeFactor = strlen(_knownValue.GetASCII())+1;
+					break;
+				case MorphText::SHIFTJIS:
+					_valueSizeFactor = strlen(_knownValue.GetShiftJis())+1;
+					break;
+				case MorphText::UTF8:
+					_valueSizeFactor = strlen(_knownValue.GetUTF8().c_str())+1;
+					break;
+				}
+				
+			}
 			else if constexpr(std::is_integral_v<dataType> || std::is_floating_point_v<dataType>)
 			{
 				_valueSizeFactor = sizeof(dataType);
@@ -682,9 +744,9 @@ namespace Xertz
 			GetInstance()._secondaryKnownValue = secondaryKnownValue;
 			GetInstance()._precision = precision;
 			GetInstance()._condition = condition;
+			if constexpr (!std::is_same_v<dataType, MorphText>)
 			GetInstance().SetUpComparasionOperator();
 			GetInstance().ReserveResultsSpace();
-			GetInstance().SetUpComparasionOperator();
 
 			if constexpr (is_instantiation_of<dataType, OperativeArray>::value)
 			{
@@ -777,6 +839,10 @@ namespace Xertz
 						GetInstance().SuccessiveKnownRGBA();
 					}
 				}
+			}
+			else if constexpr (std::is_same_v<MorphText, dataType>)
+			{
+					GetInstance().InitialKnownText();
 			}
 			else //float, integral
 			{
