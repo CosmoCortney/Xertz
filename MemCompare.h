@@ -847,5 +847,10 @@ namespace Xertz
 			else
 				return GetInstance()._knownValue.ItemCount();
 		}
+
+		static dataType& GetPrimaryKnownValue()
+		{
+			return GetInstance()._knownValue;
+		}
 	};
 }
