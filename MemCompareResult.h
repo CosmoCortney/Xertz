@@ -159,6 +159,9 @@ namespace Xertz
 				case MorphText::ASCII: 
 					_valueWidth = strlen(ptr->GetASCII()) + 1;
 					break;
+				case MorphText::SHIFTJIS:
+					_valueWidth = strlen(ptr->GetShiftJis()) + 1;
+					break;
 				}
 			}
 			else //integral, float types
