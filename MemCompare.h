@@ -315,6 +315,23 @@ namespace Xertz
 
 				delete[] buf;
 			} break;
+			case MorphText::UTF32LE: case MorphText::UTF32BE: {
+				char32_t* buf = new char32_t[_valueSizeFactor];
+				buf[_valueSizeFactor / 4 - 1] = '\0';
+				bool isBigEndian = format == MorphText::UTF32BE ? true : false;
+				for (uint64_t offsetDump = 0; offsetDump < _dumpSize; offsetDump += _alignment)
+				{
+					memcpy(buf, _currentDump.GetDump<char*>() + offsetDump, _valueSizeFactor - 1);
+					if (_knownValue.Compare(buf, true, isBigEndian))
+					{
+						*(_addresses + _resultCount) = offsetDump;
+						std::memcpy(((char*)_values) + _resultCount * _valueSizeFactor, buf, _valueSizeFactor);
+						++_resultCount;
+					}
+				}
+
+				delete[] buf;
+			} break;
 			default: //ASCII, Shift-Jis, UTF-8
 			{
 				char* buf = new char[_valueSizeFactor];
@@ -597,6 +614,9 @@ namespace Xertz
 					break;
 				case MorphText::UTF16LE: case MorphText::UTF16BE:
 					_valueSizeFactor = wcslen(_knownValue.GetUTF16(_knownValue.GetPrimaryFormat() == MorphText::UTF16BE ? true : false).c_str())*2 + 2;
+					break;
+				case MorphText::UTF32LE: case MorphText::UTF32BE:
+					_valueSizeFactor = std::char_traits<char32_t>::length(_knownValue.GetUTF32(_knownValue.GetPrimaryFormat() == MorphText::UTF32BE ? true : false).c_str()) * 4 + 4;
 					break;
 				}
 				
