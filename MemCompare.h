@@ -298,30 +298,14 @@ namespace Xertz
 
 			switch (format)
 			{
-			case MorphText::UTF8: {
-				char* buf = new char[_valueSizeFactor];
-				buf[_valueSizeFactor - 1] = '\0';
-
+			case MorphText::UTF16LE: case MorphText::UTF16BE: {
+				wchar_t* buf = new wchar_t[_valueSizeFactor];
+				buf[_valueSizeFactor/2 - 1] = '\0';
+				bool isBigEndian = format == MorphText::UTF16BE ? true : false;
 				for (uint64_t offsetDump = 0; offsetDump < _dumpSize; offsetDump += _alignment)
 				{
 					memcpy(buf, _currentDump.GetDump<char*>() + offsetDump, _valueSizeFactor - 1);
-					if (_knownValue.Compare(buf, true, format))
-					{
-						*(_addresses + _resultCount) = offsetDump;
-						std::memcpy(((char*)_values) + _resultCount * _valueSizeFactor, buf, _valueSizeFactor);
-						++_resultCount;
-					}
-				}
-
-			} break;
-			case MorphText::SHIFTJIS: {
-				char* buf = new char[_valueSizeFactor];
-				buf[_valueSizeFactor - 1] = '\0';
-
-				for (uint64_t offsetDump = 0; offsetDump < _dumpSize; offsetDump += _alignment)
-				{
-					memcpy(buf, _currentDump.GetDump<char*>() + offsetDump, _valueSizeFactor - 1);
-					if (_knownValue.Compare(buf, true, format))
+					if (_knownValue.Compare(buf, true, isBigEndian))
 					{
 						*(_addresses + _resultCount) = offsetDump;
 						std::memcpy(((char*)_values) + _resultCount * _valueSizeFactor, buf, _valueSizeFactor);
@@ -331,7 +315,7 @@ namespace Xertz
 
 				delete[] buf;
 			} break;
-			default: //ASCII
+			default: //ASCII, Shift-Jis, UTF-8
 			{
 				char* buf = new char[_valueSizeFactor];
 				buf[_valueSizeFactor-1] = '\0';
@@ -339,7 +323,7 @@ namespace Xertz
 				for (uint64_t offsetDump = 0; offsetDump < _dumpSize; offsetDump += _alignment)
 				{
 					memcpy(buf, _currentDump.GetDump<char*>() + offsetDump, _valueSizeFactor - 1);
-					if (_knownValue.Compare(buf, format))
+					if (_knownValue.Compare(buf, true, format))
 					{
 						*(_addresses + _resultCount) = offsetDump;
 						std::memcpy(((char*)_values) + _resultCount * _valueSizeFactor, buf, _valueSizeFactor);
@@ -609,7 +593,10 @@ namespace Xertz
 					_valueSizeFactor = strlen(_knownValue.GetShiftJis())+1;
 					break;
 				case MorphText::UTF8:
-					_valueSizeFactor = strlen(_knownValue.GetUTF8().c_str())+1;
+					_valueSizeFactor = strlen(_knownValue.GetUTF8().c_str()) + 1;
+					break;
+				case MorphText::UTF16LE: case MorphText::UTF16BE:
+					_valueSizeFactor = wcslen(_knownValue.GetUTF16(_knownValue.GetPrimaryFormat() == MorphText::UTF16BE ? true : false).c_str())*2 + 2;
 					break;
 				}
 				
