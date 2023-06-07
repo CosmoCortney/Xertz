@@ -298,6 +298,22 @@ namespace Xertz
 
 			switch (format)
 			{
+			case MorphText::UTF8: {
+				char* buf = new char[_valueSizeFactor];
+				buf[_valueSizeFactor - 1] = '\0';
+
+				for (uint64_t offsetDump = 0; offsetDump < _dumpSize; offsetDump += _alignment)
+				{
+					memcpy(buf, _currentDump.GetDump<char*>() + offsetDump, _valueSizeFactor - 1);
+					if (_knownValue.Compare(buf, true, format))
+					{
+						*(_addresses + _resultCount) = offsetDump;
+						std::memcpy(((char*)_values) + _resultCount * _valueSizeFactor, buf, _valueSizeFactor);
+						++_resultCount;
+					}
+				}
+
+			} break;
 			case MorphText::SHIFTJIS: {
 				char* buf = new char[_valueSizeFactor];
 				buf[_valueSizeFactor - 1] = '\0';
@@ -745,7 +761,7 @@ namespace Xertz
 			GetInstance()._precision = precision;
 			GetInstance()._condition = condition;
 			if constexpr (!std::is_same_v<dataType, MorphText>)
-			GetInstance().SetUpComparasionOperator();
+				GetInstance().SetUpComparasionOperator();
 			GetInstance().ReserveResultsSpace();
 
 			if constexpr (is_instantiation_of<dataType, OperativeArray>::value)
