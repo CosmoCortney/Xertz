@@ -302,6 +302,7 @@ namespace Xertz
 				wchar_t* buf = new wchar_t[_valueSizeFactor];
 				buf[_valueSizeFactor/2 - 1] = '\0';
 				bool isBigEndian = format == MorphText::UTF16BE ? true : false;
+
 				for (uint64_t offsetDump = 0; offsetDump < _dumpSize; offsetDump += _alignment)
 				{
 					memcpy(buf, _currentDump.GetDump<char*>() + offsetDump, _valueSizeFactor - 1);
@@ -312,13 +313,13 @@ namespace Xertz
 						++_resultCount;
 					}
 				}
-
 				delete[] buf;
 			} break;
 			case MorphText::UTF32LE: case MorphText::UTF32BE: {
 				char32_t* buf = new char32_t[_valueSizeFactor];
 				buf[_valueSizeFactor / 4 - 1] = '\0';
 				bool isBigEndian = format == MorphText::UTF32BE ? true : false;
+
 				for (uint64_t offsetDump = 0; offsetDump < _dumpSize; offsetDump += _alignment)
 				{
 					memcpy(buf, _currentDump.GetDump<char*>() + offsetDump, _valueSizeFactor - 1);
@@ -329,10 +330,9 @@ namespace Xertz
 						++_resultCount;
 					}
 				}
-
 				delete[] buf;
 			} break;
-			default: //ASCII, Shift-Jis, UTF-8
+			default: //ASCII, Shift-Jis, UTF-8, ISO-8859-X
 			{
 				char* buf = new char[_valueSizeFactor];
 				buf[_valueSizeFactor-1] = '\0';
@@ -340,6 +340,7 @@ namespace Xertz
 				for (uint64_t offsetDump = 0; offsetDump < _dumpSize; offsetDump += _alignment)
 				{
 					memcpy(buf, _currentDump.GetDump<char*>() + offsetDump, _valueSizeFactor - 1);
+					int x = strlen(buf);
 					if (_knownValue.Compare(buf, true, format))
 					{
 						*(_addresses + _resultCount) = offsetDump;
@@ -347,10 +348,8 @@ namespace Xertz
 						++_resultCount;
 					}
 				}
-
 				delete[] buf;
 			}
-
 			}
 		}
 
@@ -618,6 +617,8 @@ namespace Xertz
 				case MorphText::UTF32LE: case MorphText::UTF32BE:
 					_valueSizeFactor = std::char_traits<char32_t>::length(_knownValue.GetUTF32(_knownValue.GetPrimaryFormat() == MorphText::UTF32BE ? true : false).c_str()) * 4 + 4;
 					break;
+				default: //ISO-8859-X
+					_valueSizeFactor = strlen(_knownValue.GetISO8859X(_knownValue.GetPrimaryFormat())) +1;
 				}
 				
 			}

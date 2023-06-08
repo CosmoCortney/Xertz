@@ -171,6 +171,8 @@ namespace Xertz
 				case MorphText::UTF32LE: case MorphText::UTF32BE:
 					_valueWidth = std::char_traits<char32_t>::length(ptr->GetUTF32(ptr->GetPrimaryFormat() == MorphText::UTF32BE ? true : false).c_str()) * 4 + 4;
 					break;
+				default: //ISO-8859-X
+					_valueWidth = strlen(ptr->GetISO8859X(ptr->GetPrimaryFormat())) + 1;
 				}
 			}
 			else //integral, float types
