@@ -5,6 +5,7 @@
 #include<iostream>
 #include"OperativeArray.h"
 #include"LitColor.h"
+#include"MorphText.h"
 
 namespace Xertz
 {
@@ -149,6 +150,29 @@ namespace Xertz
 				else
 				{
 					_valueWidth = ptr->ItemCount() * 4;
+				}
+			}
+			else if constexpr (std::is_same_v<dataType, MorphText>)
+			{
+				switch (ptr->GetPrimaryFormat())
+				{
+				case MorphText::ASCII: 
+					_valueWidth = strlen(ptr->GetASCII()) + 1;
+					break;
+				case MorphText::SHIFTJIS:
+					_valueWidth = strlen(ptr->GetShiftJis()) + 1;
+					break;
+				case MorphText::UTF8:
+					_valueWidth = strlen(ptr->GetUTF8().c_str()) + 1;
+					break;
+				case MorphText::UTF16LE: case MorphText::UTF16BE:
+					_valueWidth = wcslen(ptr->GetUTF16(ptr->GetPrimaryFormat() == MorphText::UTF16BE ? true : false).c_str())*2 + 2;
+					break;
+				case MorphText::UTF32LE: case MorphText::UTF32BE:
+					_valueWidth = std::char_traits<char32_t>::length(ptr->GetUTF32(ptr->GetPrimaryFormat() == MorphText::UTF32BE ? true : false).c_str()) * 4 + 4;
+					break;
+				default: //ISO-8859-X
+					_valueWidth = strlen(ptr->GetISO8859X(ptr->GetPrimaryFormat())) + 1;
 				}
 			}
 			else //integral, float types

@@ -291,6 +291,68 @@ namespace Xertz
 			}
 		}
 
+		void InitialKnownText()
+		{
+			int format = _knownValue.GetPrimaryFormat();
+			int stringLength = 0;
+
+			switch (format)
+			{
+			case MorphText::UTF16LE: case MorphText::UTF16BE: {
+				wchar_t* buf = new wchar_t[_valueSizeFactor];
+				buf[_valueSizeFactor/2 - 1] = '\0';
+				bool isBigEndian = format == MorphText::UTF16BE ? true : false;
+
+				for (uint64_t offsetDump = 0; offsetDump < _dumpSize; offsetDump += _alignment)
+				{
+					memcpy(buf, _currentDump.GetDump<char*>() + offsetDump, _valueSizeFactor - 1);
+					if (_knownValue.Compare(buf, true, isBigEndian))
+					{
+						*(_addresses + _resultCount) = offsetDump;
+						std::memcpy(((char*)_values) + _resultCount * _valueSizeFactor, buf, _valueSizeFactor);
+						++_resultCount;
+					}
+				}
+				delete[] buf;
+			} break;
+			case MorphText::UTF32LE: case MorphText::UTF32BE: {
+				char32_t* buf = new char32_t[_valueSizeFactor];
+				buf[_valueSizeFactor / 4 - 1] = '\0';
+				bool isBigEndian = format == MorphText::UTF32BE ? true : false;
+
+				for (uint64_t offsetDump = 0; offsetDump < _dumpSize; offsetDump += _alignment)
+				{
+					memcpy(buf, _currentDump.GetDump<char*>() + offsetDump, _valueSizeFactor - 1);
+					if (_knownValue.Compare(buf, true, isBigEndian))
+					{
+						*(_addresses + _resultCount) = offsetDump;
+						std::memcpy(((char*)_values) + _resultCount * _valueSizeFactor, buf, _valueSizeFactor);
+						++_resultCount;
+					}
+				}
+				delete[] buf;
+			} break;
+			default: //ASCII, Shift-Jis, UTF-8, ISO-8859-X
+			{
+				char* buf = new char[_valueSizeFactor];
+				buf[_valueSizeFactor-1] = '\0';
+
+				for (uint64_t offsetDump = 0; offsetDump < _dumpSize; offsetDump += _alignment)
+				{
+					memcpy(buf, _currentDump.GetDump<char*>() + offsetDump, _valueSizeFactor - 1);
+					int x = strlen(buf);
+					if (_knownValue.Compare(buf, true, format))
+					{
+						*(_addresses + _resultCount) = offsetDump;
+						std::memcpy(((char*)_values) + _resultCount * _valueSizeFactor, buf, _valueSizeFactor);
+						++_resultCount;
+					}
+				}
+				delete[] buf;
+			}
+			}
+		}
+
 		void InitialKnownRGBAF()
 		{
 			LitColor readValue;
@@ -536,6 +598,30 @@ namespace Xertz
 					_valueSizeFactor = 4;
 				}
 			}
+			else if constexpr (std::is_same_v<dataType, MorphText>)
+			{
+				switch (_knownValue.GetPrimaryFormat())
+				{
+				case MorphText::ASCII:
+					_valueSizeFactor = strlen(_knownValue.GetASCII())+1;
+					break;
+				case MorphText::SHIFTJIS:
+					_valueSizeFactor = strlen(_knownValue.GetShiftJis())+1;
+					break;
+				case MorphText::UTF8:
+					_valueSizeFactor = strlen(_knownValue.GetUTF8().c_str()) + 1;
+					break;
+				case MorphText::UTF16LE: case MorphText::UTF16BE:
+					_valueSizeFactor = wcslen(_knownValue.GetUTF16(_knownValue.GetPrimaryFormat() == MorphText::UTF16BE ? true : false).c_str())*2 + 2;
+					break;
+				case MorphText::UTF32LE: case MorphText::UTF32BE:
+					_valueSizeFactor = std::char_traits<char32_t>::length(_knownValue.GetUTF32(_knownValue.GetPrimaryFormat() == MorphText::UTF32BE ? true : false).c_str()) * 4 + 4;
+					break;
+				default: //ISO-8859-X
+					_valueSizeFactor = strlen(_knownValue.GetISO8859X(_knownValue.GetPrimaryFormat())) +1;
+				}
+				
+			}
 			else if constexpr(std::is_integral_v<dataType> || std::is_floating_point_v<dataType>)
 			{
 				_valueSizeFactor = sizeof(dataType);
@@ -682,9 +768,9 @@ namespace Xertz
 			GetInstance()._secondaryKnownValue = secondaryKnownValue;
 			GetInstance()._precision = precision;
 			GetInstance()._condition = condition;
-			GetInstance().SetUpComparasionOperator();
+			if constexpr (!std::is_same_v<dataType, MorphText>)
+				GetInstance().SetUpComparasionOperator();
 			GetInstance().ReserveResultsSpace();
-			GetInstance().SetUpComparasionOperator();
 
 			if constexpr (is_instantiation_of<dataType, OperativeArray>::value)
 			{
@@ -778,6 +864,10 @@ namespace Xertz
 					}
 				}
 			}
+			else if constexpr (std::is_same_v<MorphText, dataType>)
+			{
+					GetInstance().InitialKnownText();
+			}
 			else //float, integral
 			{
 				if (GetInstance()._iterationCount == 0)
@@ -846,6 +936,11 @@ namespace Xertz
 				return 1;
 			else
 				return GetInstance()._knownValue.ItemCount();
+		}
+
+		static dataType& GetPrimaryKnownValue()
+		{
+			return GetInstance()._knownValue;
 		}
 	};
 }
