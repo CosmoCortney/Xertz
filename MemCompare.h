@@ -6,6 +6,7 @@
 #include"MemCompareResult.h"
 #include"MemCompareOperations.h"
 #include <type_traits>
+#include <tuple>
 
 namespace Xertz
 {
@@ -745,21 +746,21 @@ namespace Xertz
 
 	public:
 		//I'm doing this kind of overloading here because I can't set template parameters optional (multiple definitions). Some parameters also have to be passed by references since they may be more complex structures
-		static uint64_t Iterate(void* dumpAddress, uint64_t dumpSize, int32_t condition, bool isKnownValue, float precision)
+		static std::tuple<uint64_t, int> Iterate(void* dumpAddress, uint64_t dumpSize, int32_t condition, bool isKnownValue, float precision, int counterIteration)
 		{
 			dataType dummyVal;
 			dataType dummyVal2;
 			isKnownValue = false;
-			return GetInstance().Iterate(dumpAddress, dumpSize, condition, isKnownValue, precision, dummyVal, dummyVal2);
+			return GetInstance().Iterate(dumpAddress, dumpSize, condition, isKnownValue, precision, dummyVal, dummyVal2, counterIteration);
 		}
 
-		static uint64_t Iterate(void* dumpAddress, uint64_t dumpSize, int32_t condition, bool isKnownValue, float precision, const dataType knownValue)
+		static std::tuple<uint64_t, int> Iterate(void* dumpAddress, uint64_t dumpSize, int32_t condition, bool isKnownValue, float precision, const dataType knownValue, int counterIteration)
 		{
 			dataType dummyVal;
-			return GetInstance().Iterate(dumpAddress, dumpSize, condition, isKnownValue, precision, knownValue, dummyVal);
+			return GetInstance().Iterate(dumpAddress, dumpSize, condition, isKnownValue, precision, knownValue, dummyVal, counterIteration);
 		}
 
-		static uint64_t Iterate(void* dumpAddress, uint64_t dumpSize, int32_t condition, bool isKnownValue, float precision, const dataType knownValue, const dataType secondaryKnownValue)
+		static std::tuple<uint64_t, int> Iterate(void* dumpAddress, uint64_t dumpSize, int32_t condition, bool isKnownValue, float precision, const dataType knownValue, const dataType secondaryKnownValue, int counterIteration)
 		{
 			GetInstance()._resultCount = 0;
 			GetInstance()._knownValue = knownValue;
@@ -891,7 +892,7 @@ namespace Xertz
 
 			GetInstance().SetAndSaveResults();
 			++GetInstance()._iterationCount;
-			return GetInstance()._resultCount;
+			return std::tuple<uint64_t, int>(GetInstance()._resultCount, GetInstance()._iterationCount);
 		}
 
 		static void Reset()
