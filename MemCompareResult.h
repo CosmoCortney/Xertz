@@ -233,7 +233,7 @@ namespace Xertz
 		bool LoadResults(bool zipped)
 		{
 			uint64_t readSize = 16;
-			FreeData(true);
+			FreeData(false);
 			if (!Xertz::LoadBinary(_path, (void*&)_fileHeader, readSize, 0))
 				return false;
 
