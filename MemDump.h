@@ -22,7 +22,11 @@ namespace Xertz
 		MemDump(std::wstring& path, void* address, uint64_t size = 0, uint64_t startReading = 0);
 		MemDump(std::string& path, void* address, uint64_t size = 0, uint64_t startReading = 0);
 		MemDump() {};
-		~MemDump() { free(_memDump); }
+		~MemDump()
+		{
+			free(_memDump);
+			_memDump = nullptr;
+		}
 		bool SaveDump(std::wstring& filePath);
 		bool SaveDump();
 		template<typename T> T GetAddress() { return (T)_address; }
