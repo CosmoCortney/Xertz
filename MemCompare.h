@@ -908,14 +908,12 @@ namespace Xertz
 			return std::tuple<uint64_t, int>(GetInstance()._resultCount, GetInstance()._iterationCount);
 		}
 
-		static void Reset()
+		static std::tuple<uint64_t, int> Reset()
 		{
 			GetInstance()._iterationCount = 0;
-			GetInstance()._results.clear();
-			GetInstance()._currentDump.~MemDump();
 			GetInstance()._signed = false;
 			GetInstance()._cached = false;
-			GetInstance()._rewindable = false;
+			GetInstance()._zip = false;
 			GetInstance()._alignment = 4;
 			GetInstance()._pid = 0;
 			GetInstance()._dumpAddress = nullptr;
@@ -923,10 +921,20 @@ namespace Xertz
 			GetInstance()._resultCount = 0;
 			GetInstance()._dumpDir = L"";
 			GetInstance()._swapBytes = false;
-			GetInstance()._knownValue = (dataType)0;
-			GetInstance()._secondaryKnownValue = (dataType)0;
 			GetInstance()._condition = 0;
-			GetInstance()._comparisonOperator = nullptr;
+			GetInstance()._precision = 0.0f;
+			GetInstance()._valueSizeFactor = 1;
+			GetInstance()._addresses = nullptr;
+			GetInstance()._values = nullptr;
+			GetInstance()._previousValues = nullptr;
+			GetInstance()._counterIteration = 0;
+			GetInstance()._currentDump.~MemDump();
+
+			for (int i = 0; i < GetInstance()._results.size(); ++i)
+				GetInstance()._results[i]->FreeData(false);
+			GetInstance()._results.clear();
+
+			return std::tuple<uint64_t, int>(0, 0);
 		}
 
 		static void SetUp(int pid, std::wstring& dir, bool cached, bool swapByptes, int alignment)
