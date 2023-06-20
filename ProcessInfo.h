@@ -24,6 +24,12 @@ namespace Xertz
         bool RefreshModuleList();
 
     public:
+        ProcessInfo() {}
+        ProcessInfo(const ProcessInfo& other)
+        {
+            *this = other;
+        }
+
         ProcessInfo(int pid, std::wstring processName);
         //~ProcessInfo();
 
@@ -46,6 +52,21 @@ namespace Xertz
             LPVOID ptr = VirtualAllocEx(_handle, (void*)address, size, MEM_COMMIT, protection);
             RefreshRegionList();
             return (T)ptr;
+        }
+
+        void operator=(const ProcessInfo& other)
+        {
+            _isX64 = other._isX64;
+            _isRunning = other._isRunning;
+            _pid = other._pid;
+            _handle = other._handle;
+            _processName = other._processName;
+            _memoryRegions = other._memoryRegions;
+            _modules = other._modules;
+            _filepath = other._filepath;
+
+            if (!_handle)
+                _handle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, _pid);
         }
 	};
 
