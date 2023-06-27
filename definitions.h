@@ -74,12 +74,12 @@ namespace Xertz
 	}
 
 	//a person with undefined behavior may create code with undefined behavior
-	template<typename InType, typename OutType> static inline OutType ReinterpreteType(InType val)
+	template<typename InType, typename OutType> static inline OutType ReinterpreteType(const InType val)
 	{
 		return *reinterpret_cast<OutType*>(&val);
 	}
 
-	static bool SaveBinary(std::wstring& filePath, void* data, uint64_t size, bool append = false, bool zip = false)
+	static bool SaveBinary(const std::wstring& filePath, void* data, const uint64_t size, const bool append = false, const bool zip = false)
 	{
 		std::ofstream file(filePath, std::ios::binary | (append ? std::ios_base::app : std::ios::out));
 		if (!file)
@@ -120,7 +120,7 @@ namespace Xertz
 		return true;
 	}
 
-	static bool LoadBinary(std::wstring& filePath, void*& out, uint64_t& size, uint64_t startPos = 0)
+	static bool LoadBinary(const std::wstring& filePath, void*& out, uint64_t& size, const uint64_t startPos = 0)
 	{
 		std::ifstream file;
 		file.open(filePath, std::ios::binary | std::ios::in);

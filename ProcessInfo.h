@@ -30,24 +30,24 @@ namespace Xertz
             *this = other;
         }
 
-        ProcessInfo(int pid, std::wstring processName);
+        ProcessInfo(const int pid, const std::wstring processName);
         //~ProcessInfo();
 
         int GetPID();
         std::wstring& GetProcessName();
-        uint64_t GetModuleAddress(std::wstring moduleName);
+        uint64_t GetModuleAddress(const std::wstring moduleName);
         MODULE_LIST& GetModuleList();
         REGION_LIST& GetRegionList();
-        HANDLE InitHandle(int64_t accessMode, bool inheritHandle);
+        HANDLE InitHandle(const int64_t accessMode, const bool inheritHandle);
         HANDLE GetHandle();
         bool IsX64();
         bool IsRunning();
         std::wstring& GetFilePath();
-        void ReadExRAM(void* out, void* address, unsigned long long size);
-        void WriteExRAM(void* in, void* address, unsigned long long size);
-        MemDump DumpMemory(void* address, uint64_t size);
-        template<typename T> bool FillProcessMemory(uint64_t start, uint64_t writeSize, T val, uint64_t valSize);
-        template<typename T> T AllocateRegion(uint64_t size, uint64_t allocationType, uint64_t protection, uint64_t address = NULL) //ToDo: make this typesafe
+        void ReadExRAM(void* out, const void* address, const unsigned long long size);
+        void WriteExRAM(const void* in, void* address, const unsigned long long size);
+        MemDump DumpMemory(void* address, const uint64_t size);
+        template<typename T> bool FillProcessMemory(const uint64_t start, const uint64_t writeSize, const T val, const uint64_t valSize);
+        template<typename T> T AllocateRegion(const uint64_t size, const uint64_t allocationType, const uint64_t protection, const uint64_t address = NULL) //ToDo: make this typesafe
         {
             LPVOID ptr = VirtualAllocEx(_handle, (void*)address, size, MEM_COMMIT, protection);
             RefreshRegionList();

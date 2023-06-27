@@ -52,7 +52,7 @@ PROCESS_INFO_LIST& Xertz::SystemInfo::GetProcessInfoList()
 	return GetInstance().s_processInfoList;
 }
 
-PROCESS_INFO Xertz::SystemInfo::GetProcessInfo(int pid)
+PROCESS_INFO Xertz::SystemInfo::GetProcessInfo(const int pid)
 {
 	if (GetInstance().RefreshProcessInfoList())
 	{
@@ -68,7 +68,7 @@ PROCESS_INFO Xertz::SystemInfo::GetProcessInfo(int pid)
 	return ProcessInfo(-1, L"Process not found");
 }
 
-PROCESS_INFO Xertz::SystemInfo::GetProcessInfo(std::wstring processName, int substring, int caseSensitive)
+PROCESS_INFO Xertz::SystemInfo::GetProcessInfo(std::wstring processName, const int substring, const int caseSensitive)
 {
 	if (GetInstance().RefreshProcessInfoList())
 	{
@@ -100,7 +100,7 @@ PROCESS_INFO Xertz::SystemInfo::GetProcessInfo(std::wstring processName, int sub
 	return ProcessInfo(-1, L"Process not found");
 }
 
-bool Xertz::SystemInfo::KillProcess(int pid)
+bool Xertz::SystemInfo::KillProcess(const int pid)
 {
 	HANDLE h = OpenProcess(PROCESS_TERMINATE, false, pid);
 	TerminateProcess(h, 1);
@@ -113,7 +113,7 @@ bool Xertz::SystemInfo::KillProcess(std::wstring processName, int substring, int
 	return GetInstance().KillProcess(pid);
 }
 
-std::wstring Xertz::SystemInfo::WString2Lower(std::wstring& str)
+std::wstring Xertz::SystemInfo::WString2Lower(const std::wstring& str)
 {
 	std::wstring result = str;
 	std::transform(result.begin(), result.end(), result.begin(), tolower);
@@ -129,7 +129,7 @@ bool Xertz::SystemInfo::PGetMasterVolume()
 	return !success;
 }
 
-bool Xertz::SystemInfo::GetMasterVolume(float* out, int scalarOrDecibel)
+bool Xertz::SystemInfo::GetMasterVolume(float* out, const int scalarOrDecibel)
 {
 	bool success;
 	success = (bool)GetInstance().PGetMasterVolume();
@@ -137,7 +137,7 @@ bool Xertz::SystemInfo::GetMasterVolume(float* out, int scalarOrDecibel)
 	return success;
 }
 
-bool Xertz::SystemInfo::SetMasterVolume(float in, int scalarOrDecibel)
+bool Xertz::SystemInfo::SetMasterVolume(const float in, const int scalarOrDecibel)
 {
 	bool success;
 	if (scalarOrDecibel == Xertz::SCALAR)
@@ -152,7 +152,7 @@ bool Xertz::SystemInfo::SetMasterVolume(float in, int scalarOrDecibel)
 	return success;
 }
 
-bool Xertz::SystemInfo::SetMasterMute(int option)
+bool Xertz::SystemInfo::SetMasterMute(const int option)
 {
 	bool success;
 	if (option == Xertz::MUTE)

@@ -18,20 +18,20 @@ namespace Xertz
 		void DumpExRAM();
 
 	public:
-		MemDump(HANDLE handle, void* address, uint64_t memSize);
-		MemDump(std::wstring& path, void* address, uint64_t size = 0, uint64_t startReading = 0);
-		MemDump(std::string& path, void* address, uint64_t size = 0, uint64_t startReading = 0);
+		MemDump(const HANDLE handle, void* address, const uint64_t memSize);
+		MemDump(const std::wstring& path, void* address, const uint64_t size = 0, const uint64_t startReading = 0);
+		MemDump(const std::string& path, void* address, const uint64_t size = 0, const uint64_t startReading = 0);
 		MemDump() {};
 		~MemDump()
 		{
 			free(_memDump);
 			_memDump = nullptr;
 		}
-		bool SaveDump(std::wstring& filePath);
+		bool SaveDump(const std::wstring& filePath);
 		bool SaveDump();
-		template<typename T> T GetAddress() { return (T)_address; }
-		template<typename T> T GetDump() { return (T)_memDump; }
-		uint64_t GetSize() { return _memSize; }
+		template<typename T> T GetAddress() const { return (T)_address; }
+		template<typename T> T GetDump() const { return (T)_memDump; }
+		uint64_t GetSize() const { return _memSize; }
 
 		void operator=(const MemDump& other)
 		{

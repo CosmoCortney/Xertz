@@ -4,7 +4,7 @@
 #include <codecvt>
 #include<Psapi.h>
 
-Xertz::ProcessInfo::ProcessInfo(int pid, std::wstring processName)
+Xertz::ProcessInfo::ProcessInfo(const int pid, const std::wstring processName)
 {
     _pid = pid;
     _processName = processName;
@@ -56,7 +56,7 @@ MODULE_LIST& Xertz::ProcessInfo::GetModuleList()
     return _modules;
 }
 
-uint64_t Xertz::ProcessInfo::GetModuleAddress(std::wstring moduleName)
+uint64_t Xertz::ProcessInfo::GetModuleAddress(const std::wstring moduleName)
 {
     for (int i = 0; i < _modules.size(); ++i)
     {
@@ -118,7 +118,7 @@ REGION_LIST& Xertz::ProcessInfo::GetRegionList()
     return _memoryRegions;
 }
 
-HANDLE Xertz::ProcessInfo::InitHandle(int64_t accessMode, bool inheritHandle)
+HANDLE Xertz::ProcessInfo::InitHandle(const int64_t accessMode, const bool inheritHandle)
 {
     return OpenProcess(accessMode, inheritHandle, _pid);
 }
@@ -145,18 +145,18 @@ bool Xertz::ProcessInfo::IsRunning()
     return _isRunning;
 }
 
-Xertz::MemDump Xertz::ProcessInfo::DumpMemory(void* address, uint64_t size)
+Xertz::MemDump Xertz::ProcessInfo::DumpMemory(void* address, const uint64_t size)
 {
 
     return Xertz::MemDump(_handle, address, size);
 }
 
-void Xertz::ProcessInfo::ReadExRAM(void* out, void* address, unsigned long long size)
+void Xertz::ProcessInfo::ReadExRAM(void* out, const void* address, const unsigned long long size)
 {
     ReadProcessMemory(_handle, address, out, size, nullptr);
 }
 
-void Xertz::ProcessInfo::WriteExRAM(void* in, void* address, unsigned long long size)
+void Xertz::ProcessInfo::WriteExRAM(const void* in, void* address, const unsigned long long size)
 {
     WriteProcessMemory(_handle, address, in, size, nullptr);
 }

@@ -24,7 +24,7 @@ namespace Xertz
 			static SystemInfo Instance;
 			return Instance;
 		}
-		std::wstring WString2Lower(std::wstring& str);
+		std::wstring WString2Lower(const std::wstring& str);
 		bool PGetMasterVolume();
 
 		float _masterVolumeScalar = 0.0f;
@@ -35,15 +35,15 @@ namespace Xertz
 		const float _percentageFactor = 100.0f;
 
 	public:
-		static PROCESS_INFO GetProcessInfo(int pid);
+		static PROCESS_INFO GetProcessInfo(const int pid);
 		static PROCESS_INFO GetProcessInfo(std::wstring processName, int substring, int caseSensitive);
 		static PROCESS_INFO_LIST& GetProcessInfoList();
 		static bool KillProcess(int pid);
-		static bool KillProcess(std::wstring processName, int substring, int caseSensitive);
-		static bool GetMasterVolume(float* out, int scalarOrDecibel);
-		static bool SetMasterVolume(float in, int scalarOrDecibel);
-		static bool SetMasterMute(int option);
-        template<typename T> static HWND GetWindowHandle(T windowTitle)
+		static bool KillProcess(const std::wstring processName, const int substring, const int caseSensitive);
+		static bool GetMasterVolume(float* out, const int scalarOrDecibel);
+		static bool SetMasterVolume(const float in, const int scalarOrDecibel);
+		static bool SetMasterMute(const int option);
+        template<typename T> static HWND GetWindowHandle(const T windowTitle)
 		{
 			 if constexpr (std::is_same_v<T, std::wstring>)
 			 	return FindWindowW(NULL, windowTitle.c_str());

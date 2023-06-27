@@ -19,20 +19,20 @@ namespace Xertz
 		int32_t _partitionId;
 
 	public:
-		MemoryRegion(uint64_t baseAddress, uint64_t allocationBase, uint64_t allocationProtect, uint64_t regionSize, int64_t  state, int64_t  protect, int64_t  type, int32_t partitionId);
+		MemoryRegion(const uint64_t baseAddress, const uint64_t allocationBase, const uint64_t allocationProtect, const uint64_t regionSize, const int64_t state, const int64_t protect, const int64_t type, const int32_t partitionId);
 		
-		template<typename T> T GetBaseAddress(){ return (T)_baseAddress; } //ToDo: make this typesafe to all ptrs and integers
+		template<typename T> T GetBaseAddress() const { return (T)_baseAddress; } //ToDo: make this typesafe to all ptrs and integers
 		template<typename T> T GetAllocationBase() { return (T)_allocationBase; } //ToDo: make this typesafe to all ptrs and integers
-		uint64_t GetAllocationProtect() { return _allocationProtect; }
-		uint64_t GetRegionSize() { return _regionSize; }
-		int64_t GetState() { return _state; }
-		int64_t GetProtect() { return _protect; }
-		int64_t GetType() { return _type; }
-		int64_t GetPartitionId() { return _partitionId; }
+		uint64_t GetAllocationProtect() const { return _allocationProtect; }
+		uint64_t GetRegionSize() const { return _regionSize; }
+		int64_t GetState() const { return _state; }
+		int64_t GetProtect() const { return _protect; }
+		int64_t GetType() const { return _type; }
+		int64_t GetPartitionId() const { return _partitionId; }
 
 		bool Deallocate();
-		bool Extend(uint64_t size);
-		bool ChangeAllocationMode(int val);
-		bool DumpRegion(std::wstring filePath);
+		bool Extend(const uint64_t size);
+		bool ChangeAllocationMode(const int val);
+		bool DumpRegion(const std::wstring filePath);
 	};
 }

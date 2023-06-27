@@ -1,7 +1,7 @@
 #include "MemDump.h"
 #include<fstream>
 
-Xertz::MemDump::MemDump(HANDLE handle, void* address, uint64_t memSize)
+Xertz::MemDump::MemDump(const HANDLE handle, void* address, const uint64_t memSize)
 {
 	_handle = handle;
 	_hasHandle = true;
@@ -10,7 +10,7 @@ Xertz::MemDump::MemDump(HANDLE handle, void* address, uint64_t memSize)
 	DumpExRAM();
 }
 
-Xertz::MemDump::MemDump(std::wstring& path, void* address, uint64_t size, uint64_t startReading)
+Xertz::MemDump::MemDump(const std::wstring& path, void* address, const uint64_t size, const uint64_t startReading)
 {
 	_hasHandle = false;
 	_address = address;
@@ -34,7 +34,7 @@ void Xertz::MemDump::DumpExRAM()
 	}
 }
 
-bool Xertz::MemDump::SaveDump(std::wstring& filePath)
+bool Xertz::MemDump::SaveDump(const std::wstring& filePath)
 {
 	return Xertz::SaveBinary(filePath, _memDump, _memSize);
 }
