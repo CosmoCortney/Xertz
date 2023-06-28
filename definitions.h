@@ -22,14 +22,6 @@ namespace Xertz
 	template <template<typename...> class Template, typename... Args>
 	struct is_instantiation_of<Template<Args...>, Template> : std::true_type {};
 
-	enum StringDefs
-	{
-		NO_SUBSTRING = 0,
-		IS_SUBSTRING = 1,
-		CASE_SENSITIVE = 2,
-		CASE_INSENSITIVE = 3
-	};
-
 	enum Audio
 	{
 		SCALAR = 0,

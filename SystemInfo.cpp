@@ -68,16 +68,16 @@ PROCESS_INFO Xertz::SystemInfo::GetProcessInfo(const int pid)
 	return ProcessInfo(-1, L"Process not found");
 }
 
-PROCESS_INFO Xertz::SystemInfo::GetProcessInfo(std::wstring processName, const int substring, const int caseSensitive)
+PROCESS_INFO Xertz::SystemInfo::GetProcessInfo(std::wstring processName, const bool substring, const bool caseSensitive)
 {
 	if (GetInstance().RefreshProcessInfoList())
 	{
 		for (int i = 0; i < GetInstance().s_processInfoList.size(); ++i)
 		{
-			if (caseSensitive == Xertz::CASE_SENSITIVE)
+			if (caseSensitive)
 			{
-				if ((substring == Xertz::IS_SUBSTRING && GetInstance().s_processInfoList[i].GetProcessName().find(processName) != (uint64_t)-1) ||  /*case sensitive and contains*/
-					(!substring == Xertz::IS_SUBSTRING && GetInstance().s_processInfoList[i].GetProcessName().compare(processName) == 0)) /*case sensitive and same*/
+				if ((substring && GetInstance().s_processInfoList[i].GetProcessName().find(processName) != (uint64_t)-1) ||  /*case sensitive and contains*/
+					(!substring && GetInstance().s_processInfoList[i].GetProcessName().compare(processName) == 0)) /*case sensitive and same*/
 				{
 					return GetInstance().s_processInfoList[i];
 				}
@@ -88,8 +88,8 @@ PROCESS_INFO Xertz::SystemInfo::GetProcessInfo(std::wstring processName, const i
 				lProcessName = GetInstance().WString2Lower(lProcessName);
 				processName = GetInstance().WString2Lower(processName);
 
-				if ((substring == Xertz::IS_SUBSTRING && lProcessName.find(processName) != (uint64_t)-1) ||  /*case insensitive and contains*/
-					(!substring == Xertz::IS_SUBSTRING && lProcessName.compare(processName) == 0)) /*case insensitive and same*/					
+				if ((substring && lProcessName.find(processName) != (uint64_t)-1) ||  /*case insensitive and contains*/
+					(!substring && lProcessName.compare(processName) == 0)) /*case insensitive and same*/					
 				{
 					return GetInstance().s_processInfoList[i];
 				}
@@ -107,7 +107,7 @@ bool Xertz::SystemInfo::KillProcess(const int pid)
 	return CloseHandle(h);
 }
 
-bool Xertz::SystemInfo::KillProcess(std::wstring processName, int substring, int caseSensitive)
+bool Xertz::SystemInfo::KillProcess(std::wstring processName, const bool substring, const bool caseSensitive)
 {
 	int pid = GetInstance().GetProcessInfo(processName, substring, caseSensitive).GetPID();
 	return GetInstance().KillProcess(pid);
@@ -123,16 +123,16 @@ std::wstring Xertz::SystemInfo::WString2Lower(const std::wstring& str)
 bool Xertz::SystemInfo::PGetMasterVolume()
 {
 	bool success;
-	success = (bool)_endpointVolume->GetMasterVolumeLevel(&_masterVolumeDecibel);
+	success = _endpointVolume->GetMasterVolumeLevel(&_masterVolumeDecibel) != 0;
 	_masterVolumeScalar = _masterVolumeDecibel;
-	success = (bool)_endpointVolume->GetMasterVolumeLevelScalar(&_masterVolumeScalar);
+	success = _endpointVolume->GetMasterVolumeLevelScalar(&_masterVolumeScalar) != 0;
 	return !success;
 }
 
 bool Xertz::SystemInfo::GetMasterVolume(float* out, const int scalarOrDecibel)
 {
 	bool success;
-	success = (bool)GetInstance().PGetMasterVolume();
+	success = GetInstance().PGetMasterVolume();
 	scalarOrDecibel == Xertz::SCALAR ? *out = GetInstance()._masterVolumeScalar * GetInstance()._percentageFactor : *out = GetInstance()._masterVolumeDecibel;
 	return success;
 }
@@ -142,11 +142,11 @@ bool Xertz::SystemInfo::SetMasterVolume(const float in, const int scalarOrDecibe
 	bool success;
 	if (scalarOrDecibel == Xertz::SCALAR)
 	{
-		success = (bool)GetInstance()._endpointVolume->SetMasterVolumeLevelScalar(in / GetInstance()._percentageFactor, NULL);
+		success = GetInstance()._endpointVolume->SetMasterVolumeLevelScalar(in / GetInstance()._percentageFactor, NULL) != 0;
 	} 
 	else
 	{
-		success = (bool)GetInstance()._endpointVolume->SetMasterVolumeLevel(in, NULL);
+		success = GetInstance()._endpointVolume->SetMasterVolumeLevel(in, NULL) != 0;
 	}
 	GetInstance().PGetMasterVolume();
 	return success;

@@ -36,10 +36,10 @@ namespace Xertz
 
 	public:
 		static PROCESS_INFO GetProcessInfo(const int pid);
-		static PROCESS_INFO GetProcessInfo(std::wstring processName, int substring, int caseSensitive);
+		static PROCESS_INFO GetProcessInfo(std::wstring processName, const bool substring, const bool caseSensitive);
 		static PROCESS_INFO_LIST& GetProcessInfoList();
-		static bool KillProcess(int pid);
-		static bool KillProcess(const std::wstring processName, const int substring, const int caseSensitive);
+		static bool KillProcess(const int pid);
+		static bool KillProcess(const std::wstring processName, const bool substring, const bool caseSensitive);
 		static bool GetMasterVolume(float* out, const int scalarOrDecibel);
 		static bool SetMasterVolume(const float in, const int scalarOrDecibel);
 		static bool SetMasterMute(const int option);
