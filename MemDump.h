@@ -12,7 +12,7 @@ namespace Xertz
 		uint64_t _memSize = 0;
 		void* _memDump = nullptr;
 		std::wstring _filePath;
-		HANDLE _handle;
+		HANDLE _handle = 0;
 		bool _hasHandle = false;
 
 		void DumpExRAM();

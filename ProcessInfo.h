@@ -12,10 +12,10 @@ namespace Xertz
     class ProcessInfo
 	{
 	private:
-        bool _isX64;
-        bool _isRunning;
+        bool _isX64 = false;
+        bool _isRunning = false;
 		int _pid = -1;
-        HANDLE _handle;
+        HANDLE _handle = 0;
         std::wstring _processName;
         REGION_LIST _memoryRegions;
         MODULE_LIST _modules;

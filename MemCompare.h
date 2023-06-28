@@ -7,13 +7,22 @@
 #include"MemCompareOperations.h"
 #include <type_traits>
 #include <tuple>
+#include <type_traits>
 
 namespace Xertz
 {
 	template <typename dataType, typename addressType> class MemCompare
 	{
 	private:
-		MemCompare(){}
+		MemCompare()
+		{
+			if constexpr (std::is_integral_v<dataType>)
+			{
+				_knownValue = (dataType)0;
+				_secondaryKnownValue = (dataType)0;
+			}
+		}
+
 		MemCompare(MemCompare const&) = delete;
 		void operator=(MemCompare const&) = delete;
 		static MemCompare& GetInstance()
@@ -31,7 +40,7 @@ namespace Xertz
 		bool _rewindable = false;
 		bool _zip = false;
 		int _alignment = 4;
-		uint32_t _pid;
+		uint32_t _pid = -1;
 		void* _dumpAddress = nullptr;
 		uint64_t _dumpSize = 0;
 		uint64_t _resultCount = 0;
