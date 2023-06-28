@@ -40,9 +40,9 @@ namespace Xertz
 		static PROCESS_INFO_LIST& GetProcessInfoList();
 		static bool KillProcess(const int pid);
 		static bool KillProcess(const std::wstring processName, const bool substring, const bool caseSensitive);
-		static bool GetMasterVolume(float* out, const int scalarOrDecibel);
-		static bool SetMasterVolume(const float in, const int scalarOrDecibel);
-		static bool SetMasterMute(const int option);
+		static bool GetMasterVolume(float* out, const bool scalar = true);
+		static bool SetMasterVolume(const float in, const bool scalar = true);
+		static bool SetMasterMute(const bool mute = true);
         template<typename T> static HWND GetWindowHandle(const T windowTitle)
 		{
 			 if constexpr (std::is_same_v<T, std::wstring>)

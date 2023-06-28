@@ -22,14 +22,6 @@ namespace Xertz
 	template <template<typename...> class Template, typename... Args>
 	struct is_instantiation_of<Template<Args...>, Template> : std::true_type {};
 
-	enum Audio
-	{
-		SCALAR = 0,
-		DECIBEL = 1,
-		MUTE = 2,
-		UNMUTE = 3
-	};
-
 	enum Conditions
 	{
 		EQUAL = 0,

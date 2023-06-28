@@ -129,18 +129,18 @@ bool Xertz::SystemInfo::PGetMasterVolume()
 	return !success;
 }
 
-bool Xertz::SystemInfo::GetMasterVolume(float* out, const int scalarOrDecibel)
+bool Xertz::SystemInfo::GetMasterVolume(float* out, const bool scalar)
 {
 	bool success;
 	success = GetInstance().PGetMasterVolume();
-	scalarOrDecibel == Xertz::SCALAR ? *out = GetInstance()._masterVolumeScalar * GetInstance()._percentageFactor : *out = GetInstance()._masterVolumeDecibel;
+	scalar ? *out = GetInstance()._masterVolumeScalar * GetInstance()._percentageFactor : *out = GetInstance()._masterVolumeDecibel;
 	return success;
 }
 
-bool Xertz::SystemInfo::SetMasterVolume(const float in, const int scalarOrDecibel)
+bool Xertz::SystemInfo::SetMasterVolume(const float in, const bool scalar)
 {
 	bool success;
-	if (scalarOrDecibel == Xertz::SCALAR)
+	if (scalar)
 	{
 		success = GetInstance()._endpointVolume->SetMasterVolumeLevelScalar(in / GetInstance()._percentageFactor, NULL) != 0;
 	} 
@@ -152,20 +152,20 @@ bool Xertz::SystemInfo::SetMasterVolume(const float in, const int scalarOrDecibe
 	return success;
 }
 
-bool Xertz::SystemInfo::SetMasterMute(const int option)
+bool Xertz::SystemInfo::SetMasterMute(const bool mute)
 {
 	bool success;
-	if (option == Xertz::MUTE)
+	if (mute)
 	{
 		GetInstance().PGetMasterVolume();
 		float volScal = GetInstance()._masterVolumeScalar, volDec = GetInstance()._masterVolumeDecibel;
-		success = SetMasterVolume(0.0f, Xertz::SCALAR);
+		success = SetMasterVolume(0.0f, true);
 		GetInstance()._masterVolumeScalar = volScal;
 		GetInstance()._masterVolumeDecibel = volDec;
 	}
 	else
 	{
-		success = SetMasterVolume(GetInstance()._masterVolumeScalar * GetInstance()._percentageFactor, Xertz::SCALAR);
+		success = SetMasterVolume(GetInstance()._masterVolumeScalar * GetInstance()._percentageFactor, true);
 	}
 	return !success;
 }
