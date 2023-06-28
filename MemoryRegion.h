@@ -11,7 +11,7 @@ namespace Xertz
 	private:
 		uint64_t _baseAddress;
 		uint64_t _allocationBase;
-		uint64_t _allocationProtect;
+		uint32_t _allocationProtect;
 		uint64_t _regionSize;
 		int64_t _state;
 		int64_t _protect;
@@ -23,12 +23,12 @@ namespace Xertz
 		
 		template<typename T> T GetBaseAddress() const { return (T)_baseAddress; } //ToDo: make this typesafe to all ptrs and integers
 		template<typename T> T GetAllocationBase() { return (T)_allocationBase; } //ToDo: make this typesafe to all ptrs and integers
-		uint64_t GetAllocationProtect() const { return _allocationProtect; }
+		uint32_t GetAllocationProtect() const { return _allocationProtect; }
 		uint64_t GetRegionSize() const { return _regionSize; }
 		int64_t GetState() const { return _state; }
 		int64_t GetProtect() const { return _protect; }
 		int64_t GetType() const { return _type; }
-		int64_t GetPartitionId() const { return _partitionId; }
+		int32_t GetPartitionId() const { return _partitionId; }
 
 		bool Deallocate();
 		bool Extend(const uint64_t size);

@@ -769,7 +769,7 @@ namespace Xertz
 			return GetInstance().Iterate(dumpAddress, dumpSize, condition, isKnownValue, precision, knownValue, dummyVal, counterIteration);
 		}
 
-		static std::tuple<uint64_t, int> Iterate(void* dumpAddress, uint64_t dumpSize, int32_t condition, bool isKnownValue, float precision, const dataType knownValue, const dataType secondaryKnownValue, int counterIteration)
+		static std::tuple<uint64_t, uint32_t> Iterate(void* dumpAddress, uint64_t dumpSize, int32_t condition, bool isKnownValue, float precision, const dataType knownValue, const dataType secondaryKnownValue, int counterIteration)
 		{
 			GetInstance()._resultCount = 0;
 			GetInstance()._knownValue = knownValue;
@@ -914,10 +914,10 @@ namespace Xertz
 				GetInstance()._results.at(counterIteration - 1)->FreeData(false);
 			GetInstance().SetAndSaveResults();
 			GetInstance()._iterationCount = ++counterIteration;
-			return std::tuple<uint64_t, int>(GetInstance()._resultCount, GetInstance()._iterationCount);
+			return std::tuple<uint64_t, uint32_t>(GetInstance()._resultCount, GetInstance()._iterationCount);
 		}
 
-		static std::tuple<uint64_t, int> Reset()
+		static std::tuple<uint64_t, uint32_t> Reset()
 		{
 			GetInstance()._iterationCount = 0;
 			GetInstance()._signed = false;
@@ -943,7 +943,7 @@ namespace Xertz
 				GetInstance()._results[i]->FreeData(false);
 			GetInstance()._results.clear();
 
-			return std::tuple<uint64_t, int>(0, 0);
+			return std::tuple<uint64_t, uint32_t>(0, 0);
 		}
 
 		static void SetUp(int pid, std::wstring& dir, bool cached, bool swapByptes, int alignment)
