@@ -867,6 +867,7 @@ namespace Xertz
 							break;
 						case LitColor::RGB565:
 								GetInstance().InitialKnownRGB565();
+								break;
 						default: //RGB888, RGBA8888
 							GetInstance().InitialKnownRGBA();
 						}
@@ -882,6 +883,7 @@ namespace Xertz
 						break;
 					case LitColor::RGB565:
 						GetInstance().SuccessiveKnownRGB565();
+						break;
 					default: //RGB888, RGBA8888
 						GetInstance().SuccessiveKnownRGBA();
 					}
