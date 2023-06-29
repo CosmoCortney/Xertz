@@ -24,7 +24,7 @@ namespace Xertz
 			static SystemInfo Instance;
 			return Instance;
 		}
-		std::wstring WString2Lower(const std::wstring& str);
+		std::wstring WString2Lower(const std::wstring& str) const;
 		bool PGetMasterVolume();
 
 		float _masterVolumeScalar = 0.0f;
@@ -39,7 +39,7 @@ namespace Xertz
 		static PROCESS_INFO GetProcessInfo(std::wstring processName, const bool substring, const bool caseSensitive);
 		static PROCESS_INFO_LIST& GetProcessInfoList();
 		static bool KillProcess(const int pid);
-		static bool KillProcess(const std::wstring processName, const bool substring, const bool caseSensitive);
+		static bool KillProcess(const std::wstring& processName, const bool substring, const bool caseSensitive);
 		static bool GetMasterVolume(float* out, const bool scalar = true);
 		static bool SetMasterVolume(const float in, const bool scalar = true);
 		static bool SetMasterMute(const bool mute = true);

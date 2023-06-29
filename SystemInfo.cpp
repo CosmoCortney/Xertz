@@ -4,14 +4,14 @@
 Xertz::SystemInfo::SystemInfo()
 {
 	CoInitialize(nullptr);
-	CoCreateInstance(__uuidof(MMDeviceEnumerator), NULL, CLSCTX_INPROC_SERVER, __uuidof(IMMDeviceEnumerator), (LPVOID*)&_deviceEnumerator);
+	CoCreateInstance(__uuidof(MMDeviceEnumerator), NULL, CLSCTX_INPROC_SERVER, __uuidof(IMMDeviceEnumerator), reinterpret_cast<LPVOID*>(&_deviceEnumerator));
 
 	if (_deviceEnumerator != nullptr)
 	{
 		_deviceEnumerator->GetDefaultAudioEndpoint(eRender, eConsole, &_defaultDevice);
 		_deviceEnumerator->Release();
 		_deviceEnumerator = NULL;
-		_defaultDevice->Activate(__uuidof(IAudioEndpointVolume), CLSCTX_INPROC_SERVER, NULL, (LPVOID*)&_endpointVolume);
+		_defaultDevice->Activate(__uuidof(IAudioEndpointVolume), CLSCTX_INPROC_SERVER, NULL, reinterpret_cast<LPVOID*>(&_endpointVolume));
 		_defaultDevice->Release();
 		_defaultDevice = NULL;
 	}
@@ -37,7 +37,7 @@ bool Xertz::SystemInfo::RefreshProcessInfoList()
 	{
 		do
 		{
-			s_processInfoList.push_back(PROCESS_INFO(entry.th32ProcessID, std::wstring(entry.szExeFile)));
+			s_processInfoList.emplace_back(entry.th32ProcessID, std::wstring(entry.szExeFile));
 		} while (Process32NextW(snap, &entry));
 
 		return true;
@@ -76,7 +76,7 @@ PROCESS_INFO Xertz::SystemInfo::GetProcessInfo(std::wstring processName, const b
 		{
 			if (caseSensitive)
 			{
-				if ((substring && GetInstance().s_processInfoList[i].GetProcessName().find(processName) != (uint64_t)-1) ||  /*case sensitive and contains*/
+				if ((substring && GetInstance().s_processInfoList[i].GetProcessName().find(processName) != -1) ||  /*case sensitive and contains*/
 					(!substring && GetInstance().s_processInfoList[i].GetProcessName().compare(processName) == 0)) /*case sensitive and same*/
 				{
 					return GetInstance().s_processInfoList[i];
@@ -88,7 +88,7 @@ PROCESS_INFO Xertz::SystemInfo::GetProcessInfo(std::wstring processName, const b
 				lProcessName = GetInstance().WString2Lower(lProcessName);
 				processName = GetInstance().WString2Lower(processName);
 
-				if ((substring && lProcessName.find(processName) != (uint64_t)-1) ||  /*case insensitive and contains*/
+				if ((substring && lProcessName.find(processName) != -1) ||  /*case insensitive and contains*/
 					(!substring && lProcessName.compare(processName) == 0)) /*case insensitive and same*/					
 				{
 					return GetInstance().s_processInfoList[i];
@@ -107,13 +107,13 @@ bool Xertz::SystemInfo::KillProcess(const int pid)
 	return CloseHandle(h);
 }
 
-bool Xertz::SystemInfo::KillProcess(std::wstring processName, const bool substring, const bool caseSensitive)
+bool Xertz::SystemInfo::KillProcess(const std::wstring& processName, const bool substring, const bool caseSensitive)
 {
-	int pid = GetInstance().GetProcessInfo(processName, substring, caseSensitive).GetPID();
+	const int pid = GetInstance().GetProcessInfo(processName, substring, caseSensitive).GetPID();
 	return GetInstance().KillProcess(pid);
 }
 
-std::wstring Xertz::SystemInfo::WString2Lower(const std::wstring& str)
+std::wstring Xertz::SystemInfo::WString2Lower(const std::wstring& str) const
 {
 	std::wstring result = str;
 	std::transform(result.begin(), result.end(), result.begin(), tolower);
@@ -122,8 +122,7 @@ std::wstring Xertz::SystemInfo::WString2Lower(const std::wstring& str)
 
 bool Xertz::SystemInfo::PGetMasterVolume()
 {
-	bool success;
-	success = _endpointVolume->GetMasterVolumeLevel(&_masterVolumeDecibel) != 0;
+	bool success = _endpointVolume->GetMasterVolumeLevel(&_masterVolumeDecibel) != 0;
 	_masterVolumeScalar = _masterVolumeDecibel;
 	success = _endpointVolume->GetMasterVolumeLevelScalar(&_masterVolumeScalar) != 0;
 	return !success;
@@ -131,8 +130,7 @@ bool Xertz::SystemInfo::PGetMasterVolume()
 
 bool Xertz::SystemInfo::GetMasterVolume(float* out, const bool scalar)
 {
-	bool success;
-	success = GetInstance().PGetMasterVolume();
+	const bool success = GetInstance().PGetMasterVolume();
 	scalar ? *out = GetInstance()._masterVolumeScalar * GetInstance()._percentageFactor : *out = GetInstance()._masterVolumeDecibel;
 	return success;
 }
@@ -158,7 +156,7 @@ bool Xertz::SystemInfo::SetMasterMute(const bool mute)
 	if (mute)
 	{
 		GetInstance().PGetMasterVolume();
-		float volScal = GetInstance()._masterVolumeScalar, volDec = GetInstance()._masterVolumeDecibel;
+		const float volScal = GetInstance()._masterVolumeScalar, volDec = GetInstance()._masterVolumeDecibel;
 		success = SetMasterVolume(0.0f, true);
 		GetInstance()._masterVolumeScalar = volScal;
 		GetInstance()._masterVolumeDecibel = volDec;
