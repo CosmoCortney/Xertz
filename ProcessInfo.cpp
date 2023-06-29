@@ -4,14 +4,14 @@
 #include <codecvt>
 #include<Psapi.h>
 
-Xertz::ProcessInfo::ProcessInfo(const int pid, const std::wstring processName)
+Xertz::ProcessInfo::ProcessInfo(const int pid, const std::wstring& processName)
 {
     _pid = pid;
     _processName = processName;
     
     if (_handle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid))
     {
-        IsWow64Process(_handle, (int*)&_isX64);
+        IsWow64Process(_handle, reinterpret_cast<int*>(&_isX64));
         _isX64 = !_isX64;
 
         bool RefreshRegionList();
@@ -19,7 +19,7 @@ Xertz::ProcessInfo::ProcessInfo(const int pid, const std::wstring processName)
 
         //Get program file path
         WCHAR path[MAX_PATH];
-        GetModuleFileNameExW(_handle, NULL, path, MAX_PATH);
+        GetModuleFileNameExW(_handle, nullptr, path, MAX_PATH);
         _filepath = path;
     }
 }
@@ -29,19 +29,18 @@ bool Xertz::ProcessInfo::RefreshModuleList()
     if (_pid != -1)
     {
         _modules.clear();
-        HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, _pid);
+        const HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, _pid);
         MODULEENTRY32W moduleEntry;
         moduleEntry.dwSize = sizeof(moduleEntry);
 
         if (Module32FirstW(snap, &moduleEntry))
         {
-            std::wstring moduleName;
             uint64_t moduleAddress = 0;
             do
             {
-                moduleName = moduleEntry.szModule;
-                moduleAddress = (uint64_t)moduleEntry.modBaseAddr;
-                _modules.push_back(MODULE(moduleName, moduleAddress));
+                std::wstring moduleName = moduleEntry.szModule;
+                moduleAddress = reinterpret_cast<uint64_t>(moduleEntry.modBaseAddr);
+                _modules.emplace_back(moduleName, moduleAddress);
             } while (Module32NextW(snap, &moduleEntry));
             return true;
         }
@@ -56,7 +55,7 @@ MODULE_LIST& Xertz::ProcessInfo::GetModuleList()
     return _modules;
 }
 
-uint64_t Xertz::ProcessInfo::GetModuleAddress(const std::wstring moduleName)
+uint64_t Xertz::ProcessInfo::GetModuleAddress(const std::wstring& moduleName) const
 {
     for (int i = 0; i < _modules.size(); ++i)
     {
@@ -102,7 +101,7 @@ bool Xertz::ProcessInfo::RefreshRegionList()
     return false;
 }
 
-int Xertz::ProcessInfo::GetPID()
+int Xertz::ProcessInfo::GetPID() const
 {
     return _pid;
 }
@@ -118,12 +117,12 @@ REGION_LIST& Xertz::ProcessInfo::GetRegionList()
     return _memoryRegions;
 }
 
-HANDLE Xertz::ProcessInfo::InitHandle(const int64_t accessMode, const bool inheritHandle)
+HANDLE Xertz::ProcessInfo::InitHandle(const int64_t accessMode, const bool inheritHandle) const
 {
     return OpenProcess(accessMode, inheritHandle, _pid);
 }
 
-HANDLE Xertz::ProcessInfo::GetHandle()
+HANDLE Xertz::ProcessInfo::GetHandle() const
 {
     return _handle;
 }
@@ -133,7 +132,7 @@ std::wstring& Xertz::ProcessInfo::GetFilePath()
     return _filepath;
 }
 
-bool Xertz::ProcessInfo::IsX64()
+bool Xertz::ProcessInfo::IsX64() const
 {
     return _isX64;
 }
@@ -145,18 +144,18 @@ bool Xertz::ProcessInfo::IsRunning()
     return _isRunning;
 }
 
-Xertz::MemDump Xertz::ProcessInfo::DumpMemory(void* address, const uint64_t size)
+Xertz::MemDump Xertz::ProcessInfo::DumpMemory(void* address, const uint64_t size) const
 {
 
     return Xertz::MemDump(_handle, address, size);
 }
 
-void Xertz::ProcessInfo::ReadExRAM(void* out, const void* address, const unsigned long long size)
+void Xertz::ProcessInfo::ReadExRAM(void* out, const void* address, const unsigned long long size) const
 {
     ReadProcessMemory(_handle, address, out, size, nullptr);
 }
 
-void Xertz::ProcessInfo::WriteExRAM(const void* in, void* address, const unsigned long long size)
+void Xertz::ProcessInfo::WriteExRAM(const void* in, void* address, const unsigned long long size) const
 {
     WriteProcessMemory(_handle, address, in, size, nullptr);
 }
