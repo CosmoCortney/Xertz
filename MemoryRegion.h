@@ -30,9 +30,9 @@ namespace Xertz
 		int64_t GetType() const { return _type; }
 		int32_t GetPartitionId() const { return _partitionId; }
 
-		bool Deallocate();
-		bool Extend(const uint64_t size);
-		bool ChangeAllocationMode(const int val);
-		bool DumpRegion(const std::wstring filePath);
+		//bool Deallocate(); //ToDo
+		//bool Extend(const uint64_t size); //ToDo
+		//bool ChangeAllocationMode(const int val); //ToDo
+		//bool DumpRegion(const std::wstring filePath); //ToDo
 	};
 }
