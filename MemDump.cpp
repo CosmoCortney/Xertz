@@ -27,19 +27,19 @@ Xertz::MemDump::MemDump(const std::wstring& path, void* address, const uint64_t 
 void Xertz::MemDump::DumpExRAM()
 {
 	_memDump = malloc(_memSize);
-	if (!ReadProcessMemory(_handle, _address, _memDump, _memSize, NULL))
+	if (!ReadProcessMemory(_handle, _address, _memDump, _memSize, nullptr))
 	{
 		free(_memDump);
 		_memDump = nullptr;
 	}
 }
 
-bool Xertz::MemDump::SaveDump(const std::wstring& filePath)
+bool Xertz::MemDump::SaveDump(const std::wstring& filePath) const
 {
 	return Xertz::SaveBinary(filePath, _memDump, _memSize);
 }
 
-bool Xertz::MemDump::SaveDump()
+bool Xertz::MemDump::SaveDump() const
 {
 	return Xertz::SaveBinary(_filePath, _memDump, _memSize);
 }
