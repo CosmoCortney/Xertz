@@ -16,10 +16,10 @@ namespace Xertz
 	private:
 		MemCompare()
 		{
-			if constexpr (std::is_integral_v<dataType>)
+			if constexpr (std::is_integral_v<dataType> || std::is_floating_point_v<dataType>)
 			{
-				_knownValue = (dataType)0;
-				_secondaryKnownValue = (dataType)0;
+				_knownValue = static_cast<dataType>(0);
+				_secondaryKnownValue = static_cast<dataType>(0);
 			}
 		}
 
@@ -44,7 +44,7 @@ namespace Xertz
 		void* _dumpAddress = nullptr;
 		uint64_t _dumpSize = 0;
 		uint64_t _resultCount = 0;
-		std::wstring _dumpDir = L"";
+		std::wstring _dumpDir;
 		bool _swapBytes = false;
 		dataType _knownValue;
 		dataType _secondaryKnownValue;
@@ -58,7 +58,7 @@ namespace Xertz
 		DataAccess<dataType> _byteReader;
 		int _counterIteration = 0;
 
-		std::wstring GenerateFilePath()
+		std::wstring GenerateFilePath() const
 		{
 			std::wstringstream stream;
 			stream << _dumpDir << "results" << _iterationCount << ".bin";
@@ -70,7 +70,7 @@ namespace Xertz
 			for (uint64_t offsetDump = 0; offsetDump < _dumpSize; offsetDump += _alignment)
 			{
 				*(_addresses + _resultCount) = offsetDump;
-				*(_values + _resultCount) = _byteReader(*(dataType*)(_currentDump.GetDump<uint8_t*>() + offsetDump));
+				*(_values + _resultCount) = _byteReader(*reinterpret_cast<dataType*>(_currentDump.GetDump<uint8_t*>() + offsetDump));
 				++_resultCount;
 			}
 		}
@@ -84,8 +84,10 @@ namespace Xertz
 					for (uint64_t i = 0; i < _results[_counterIteration - 1]->GetResultCount(); ++i)
 					{
 						addressType addr = *(_results[_counterIteration - 1]->GetResultOffsets() + i);
-						dataType val = *(dataType*)((uint8_t*)_results[_counterIteration - 1]->GetResultValues() + i * _alignment);
-						dataType readVal = _byteReader(*(dataType*)(_currentDump.GetDump<uint8_t*>() + addr));
+						dataType val = *reinterpret_cast<dataType*>(
+							reinterpret_cast<uint8_t*>(_results[_counterIteration - 1]->GetResultValues()) 
+							+ i * _alignment);
+						dataType readVal = _byteReader(*reinterpret_cast<dataType*>(_currentDump.GetDump<uint8_t*>() + addr));
 
 						if (_comparisonOperator(readVal, val, _knownValue))
 						{
@@ -101,8 +103,11 @@ namespace Xertz
 					for (uint64_t i = 0; i < _results[_counterIteration - 1]->GetResultCount(); ++i)
 					{
 						addressType addr = *(_results[_counterIteration - 1]->GetResultOffsets() + i);
-						dataType val = *(dataType*)((uint8_t*)_results[_counterIteration - 1]->GetResultValues() + i * _alignment);
-						dataType readVal = _byteReader(*(dataType*)(_currentDump.GetDump<uint8_t*>() + addr));
+						dataType val = *reinterpret_cast<dataType*>(
+							reinterpret_cast<uint8_t*>(_results[_counterIteration - 1]->GetResultValues())
+							+ i * _alignment);
+						dataType readVal = _byteReader(*reinterpret_cast<dataType*>(_currentDump.GetDump<uint8_t*>() + addr));
+
 
 						if (_comparisonOperator(readVal, val, _precision, false))
 						{
@@ -121,8 +126,10 @@ namespace Xertz
 					for (uint64_t i = 0; i < _results[_counterIteration - 1]->GetResultCount(); ++i)
 					{
 						addressType addr = *(_results[_counterIteration - 1]->GetResultOffsets() + i);
-						dataType val = *(dataType*)((uint8_t*)_results[_counterIteration - 1]->GetResultValues() + i * _alignment);
-						dataType readVal = _byteReader(*(dataType*)(_currentDump.GetDump<uint8_t*>() + addr));
+						dataType val = *reinterpret_cast<dataType*>(
+							reinterpret_cast<uint8_t*>(_results[_counterIteration - 1]->GetResultValues())
+							+ i * _alignment);
+						dataType readVal = _byteReader(*reinterpret_cast<dataType*>(_currentDump.GetDump<uint8_t*>() + addr));
 
 						if (_comparisonOperator(readVal, val))
 						{
@@ -138,8 +145,10 @@ namespace Xertz
 					for (uint64_t i = 0; i < _results[_counterIteration - 1]->GetResultCount(); ++i)
 					{
 						addressType addr = *(_results[_counterIteration - 1]->GetResultOffsets() + i);
-						dataType val = *(dataType*)((uint8_t*)_results[_counterIteration - 1]->GetResultValues() + i * _alignment);
-						dataType readVal = _byteReader(*(dataType*)(_currentDump.GetDump<uint8_t*>() + addr));
+						dataType val = *reinterpret_cast<dataType*>(
+							reinterpret_cast<uint8_t*>(_results[_counterIteration - 1]->GetResultValues())
+							+ i * _alignment);
+						dataType readVal = _byteReader(*reinterpret_cast<dataType*>(_currentDump.GetDump<uint8_t*>() + addr));
 
 						if (_comparisonOperator(readVal, val, _precision, false))
 						{
@@ -161,7 +170,7 @@ namespace Xertz
 				{
 					for (uint64_t offsetDump = 0; offsetDump < _dumpSize; offsetDump += _alignment)
 					{
-						dataType readVal = _byteReader(*(dataType*)(_currentDump.GetDump<uint8_t*>() + offsetDump));
+						dataType readVal = _byteReader(*reinterpret_cast<dataType*>(_currentDump.GetDump<uint8_t*>() + offsetDump));
 
 						if (_comparisonOperator(readVal, _knownValue, _secondaryKnownValue))
 						{
@@ -175,7 +184,7 @@ namespace Xertz
 				{
 					for (uint64_t offsetDump = 0; offsetDump < _dumpSize; offsetDump += _alignment)
 					{
-						dataType readVal = _byteReader(*(dataType*)(_currentDump.GetDump<uint8_t*>() + offsetDump));
+						dataType readVal = _byteReader(*reinterpret_cast<dataType*>(_currentDump.GetDump<uint8_t*>() + offsetDump));
 
 						if (_comparisonOperator(readVal, _knownValue, _precision, false))
 						{
@@ -192,7 +201,7 @@ namespace Xertz
 				{
 					for (uint64_t offsetDump = 0; offsetDump < _dumpSize; offsetDump += _alignment)
 					{
-						dataType readVal = _byteReader(*(dataType*)(_currentDump.GetDump<uint8_t*>() + offsetDump));
+						dataType readVal = _byteReader(*reinterpret_cast<dataType*>(_currentDump.GetDump<uint8_t*>() + offsetDump));
 
 						if (_comparisonOperator(readVal, _knownValue))
 						{
@@ -206,7 +215,7 @@ namespace Xertz
 				{
 					for (uint64_t offsetDump = 0; offsetDump < _dumpSize; offsetDump += _alignment)
 					{
-						dataType readVal = _byteReader(*(dataType*)(_currentDump.GetDump<uint8_t*>() + offsetDump));
+						dataType readVal = _byteReader(*reinterpret_cast<dataType*>(_currentDump.GetDump<uint8_t*>() + offsetDump));
 
 						if (_comparisonOperator(readVal, _knownValue, _precision, false))
 						{
@@ -228,12 +237,12 @@ namespace Xertz
 
 			for (uint64_t offsetDump = 0; offsetDump < _dumpSize; offsetDump += _alignment)
 			{
-				readValue = byteReader(*(uint32_t*)(_currentDump.GetDump<uint8_t*>() + offsetDump));
+				readValue = byteReader(*reinterpret_cast<uint32_t*>(_currentDump.GetDump<uint8_t*>() + offsetDump));
 					  
 				if (_comparisonOperator(readValue, _knownValue, _precision))
 				{
 					*(_addresses + _resultCount) = offsetDump;
-					*((uint32_t*)_values + _resultCount) = readValue.GetRGBA();
+					*(reinterpret_cast<uint32_t*>(_values) + _resultCount) = readValue.GetRGBA();
 					++_resultCount;
 				}
 			}
@@ -247,14 +256,14 @@ namespace Xertz
 
 			for (uint64_t i = 0; i < _results[_counterIteration - 1]->GetResultCount(); ++i)
 			{
-				uint64_t readOffset = *(_results[_counterIteration - 1]->GetResultOffsets() + i);
-				readValue = byteReader(*(uint32_t*)(_currentDump.GetDump<uint8_t*>() + readOffset));
+				const uint64_t readOffset = *(_results[_counterIteration - 1]->GetResultOffsets() + i);
+				readValue = byteReader(*reinterpret_cast<uint32_t*>(_currentDump.GetDump<uint8_t*>() + readOffset));
 
 				if (_comparisonOperator(readValue, _knownValue, _precision))
 				{
 					*(_addresses + _resultCount) = *(_results[_counterIteration - 1]->GetResultOffsets() + i);
-					*((uint32_t*)_values + _resultCount) = readValue.GetRGBA();
-					*((uint32_t*)_previousValues + _resultCount) = *(((uint32_t*)_results[_counterIteration - 1]->GetResultValues() + i));
+					*(reinterpret_cast<uint32_t*>(_values) + _resultCount) = readValue.GetRGBA();
+					*(reinterpret_cast<uint32_t*>(_previousValues) + _resultCount) = *(reinterpret_cast<uint32_t*>(_results[_counterIteration - 1]->GetResultValues()) + i);
 					++_resultCount;
 				}
 			}
@@ -269,12 +278,12 @@ namespace Xertz
 
 			for (uint64_t offsetDump = 0; offsetDump < _dumpSize; offsetDump += _alignment)
 			{
-				readValue = byteReader(*(uint16_t*)(_currentDump.GetDump<uint8_t*>() + offsetDump));
+				readValue = byteReader(*reinterpret_cast<uint16_t*>(_currentDump.GetDump<uint8_t*>() + offsetDump));
 
 				if (_comparisonOperator(readValue, _knownValue, _precision))
 				{
 					*(_addresses + _resultCount) = offsetDump;
-					*((uint16_t*)_values + _resultCount) = readValue.GetRGB565();
+					*(reinterpret_cast<uint16_t*>(_values) + _resultCount) = readValue.GetRGB565();
 					++_resultCount;
 				}
 			}
@@ -288,14 +297,14 @@ namespace Xertz
 
 			for (uint64_t i = 0; i < _results[_counterIteration - 1]->GetResultCount(); ++i)
 			{
-				uint64_t readOffset = *(_results[_counterIteration - 1]->GetResultOffsets() + i);
-				readValue = byteReader(*(uint16_t*)(_currentDump.GetDump<uint8_t*>() + readOffset));
+				const uint64_t readOffset = *(_results[_counterIteration - 1]->GetResultOffsets() + i);
+				readValue = byteReader(*reinterpret_cast<uint16_t*>(_currentDump.GetDump<uint8_t*>() + readOffset));
 
 				if (_comparisonOperator(readValue, _knownValue, _precision))
 				{
 					*(_addresses + _resultCount) = *(_results[_counterIteration - 1]->GetResultOffsets() + i);
-					*((uint16_t*)_values + _resultCount) = readValue.GetRGB565();
-					*((uint16_t*)_previousValues + _resultCount) = *(((uint16_t*)_results[_counterIteration - 1]->GetResultValues() + i));
+					*(reinterpret_cast<uint16_t*>(_values) + _resultCount) = readValue.GetRGB565();
+					*(reinterpret_cast<uint16_t*>(_previousValues) + _resultCount) = *(reinterpret_cast<uint16_t*>(_results[_counterIteration - 1]->GetResultValues()) + i);
 					++_resultCount;
 				}
 			}
@@ -304,7 +313,6 @@ namespace Xertz
 		void InitialKnownText()
 		{
 			int format = _knownValue.GetPrimaryFormat();
-			int stringLength = 0;
 
 			switch (format)
 			{
@@ -319,7 +327,7 @@ namespace Xertz
 					if (_knownValue.Compare(buf, true, isBigEndian))
 					{
 						*(_addresses + _resultCount) = offsetDump;
-						std::memcpy(((char*)_values) + _resultCount * _valueSizeFactor, buf, _valueSizeFactor);
+						std::memcpy(reinterpret_cast<char*>(_values) + _resultCount * _valueSizeFactor, buf, _valueSizeFactor);
 						++_resultCount;
 					}
 				}
@@ -336,7 +344,7 @@ namespace Xertz
 					if (_knownValue.Compare(buf, true, isBigEndian))
 					{
 						*(_addresses + _resultCount) = offsetDump;
-						std::memcpy(((char*)_values) + _resultCount * _valueSizeFactor, buf, _valueSizeFactor);
+						std::memcpy(reinterpret_cast<char*>(_values) + _resultCount * _valueSizeFactor, buf, _valueSizeFactor);
 						++_resultCount;
 					}
 				}
@@ -350,11 +358,11 @@ namespace Xertz
 				for (uint64_t offsetDump = 0; offsetDump < _dumpSize; offsetDump += _alignment)
 				{
 					memcpy(buf, _currentDump.GetDump<char*>() + offsetDump, _valueSizeFactor - 1);
-					int x = strlen(buf);
+
 					if (_knownValue.Compare(buf, true, format))
 					{
 						*(_addresses + _resultCount) = offsetDump;
-						std::memcpy(((char*)_values) + _resultCount * _valueSizeFactor, buf, _valueSizeFactor);
+						std::memcpy(reinterpret_cast<char*>(_values) + _resultCount * _valueSizeFactor, buf, _valueSizeFactor);
 						++_resultCount;
 					}
 				}
@@ -369,19 +377,21 @@ namespace Xertz
 			readValue.SelectType(_knownValue.GetSelectedType());
 			DataAccess<float> byteReader;
 			byteReader.reader = _swapBytes ? DataAccess<float>::readReversed : DataAccess<float>::read;
-			int colorValueCount = (_knownValue.UsesAlpha() ? 4 : 3);
+			const int colorValueCount = (_knownValue.UsesAlpha() ? 4 : 3);
 
 			for (uint64_t offsetDump = 0; offsetDump < _dumpSize - 2*sizeof(float); offsetDump += _alignment)
 			{
 				for(int rgbaSelect = 0; rgbaSelect < colorValueCount; ++rgbaSelect)
-					readValue.SetColorValue<float>( byteReader(*(float*)(_currentDump.GetDump<uint8_t*>() + offsetDump + rgbaSelect * sizeof(float))), rgbaSelect);
+					readValue.SetColorValue<float>(byteReader(*reinterpret_cast<float*>(_currentDump.GetDump<uint8_t*>() 
+						+ offsetDump + rgbaSelect * sizeof(float))
+					), rgbaSelect);
 
 				if (_comparisonOperator(readValue, _knownValue, _precision))
 				{
 					*(_addresses + _resultCount) = offsetDump;
 					for (int rgbaSelect = 0; rgbaSelect < colorValueCount; ++rgbaSelect)
 					{
-						*((float*)_values + _resultCount * colorValueCount + rgbaSelect) = readValue.GetColorValue<float>(rgbaSelect);
+						*(reinterpret_cast<float*>(_values) + _resultCount * colorValueCount + rgbaSelect) = readValue.GetColorValue<float>(rgbaSelect);
 					}
 					++_resultCount;
 				}
@@ -396,14 +406,14 @@ namespace Xertz
 
 			for (uint64_t i = 0; i < _results[_counterIteration - 1]->GetResultCount(); ++i)
 			{
-				uint64_t readOffset = *(_results[_counterIteration - 1]->GetResultOffsets() + i);
-				readValue = byteReader(*(uint32_t*)(_currentDump.GetDump<uint8_t*>() + readOffset));
+				const uint64_t readOffset = *(_results[_counterIteration - 1]->GetResultOffsets() + i);
+				readValue = byteReader(*reinterpret_cast<uint32_t*>(_currentDump.GetDump<uint8_t*>() + readOffset));
 
 				if (_comparisonOperator(readValue, _knownValue, _precision))
 				{
 					*(_addresses + _resultCount) = *(_results[_counterIteration - 1]->GetResultOffsets() + i);
-					*((uint32_t*)_values + _resultCount) = readValue.GetRGBA();
-					*((uint32_t*)_previousValues + _resultCount) = *(((uint32_t*)_results[_counterIteration - 1]->GetResultValues() + i));
+					*(reinterpret_cast<uint32_t*>(_values) + _resultCount) = readValue.GetRGBA();
+					*(reinterpret_cast<uint32_t*>(_previousValues) + _resultCount) = *(((uint32_t*)_results[_counterIteration - 1]->GetResultValues() + i));
 					++_resultCount;
 				}
 			}
@@ -420,7 +430,7 @@ namespace Xertz
 			{
 				for (int index = 0; index < itemCount; ++index)
 				{
-					readArr[index] = byteReader(*(arrayType*)(_currentDump.GetDump<uint8_t*>() + offsetDump + index*sizeof(arrayType)));
+					readArr[index] = byteReader(*reinterpret_cast<arrayType*>(_currentDump.GetDump<uint8_t*>() + offsetDump + index*sizeof(arrayType)));
 				}
 
 				if (_comparisonOperator(_knownValue, readArr))
@@ -429,8 +439,8 @@ namespace Xertz
 
 					for (int index = 0; index < itemCount; ++index)
 					{
-						*((arrayType*)_values + _resultCount * itemCount + index) = readArr[index];
-						*((arrayType*)_previousValues + _resultCount * itemCount + index) = 0;
+						*(reinterpret_cast<arrayType*>(_values) + _resultCount * itemCount + index) = readArr[index];
+						*(reinterpret_cast<arrayType*>(_previousValues) + _resultCount * itemCount + index) = 0;
 					}
 					++_resultCount;
 				}
@@ -446,11 +456,11 @@ namespace Xertz
 
 			for (uint64_t i = 0; i < _results[_counterIteration - 1]->GetResultCount(); ++i)
 			{
-				uint64_t readOffset = *(_results[_counterIteration - 1]->GetResultOffsets() + i);
+				const uint64_t readOffset = *(_results[_counterIteration - 1]->GetResultOffsets() + i);
 				
 				for (int index = 0; index < itemCount; ++index)
 				{
-					readArr[index] = byteReader(*(arrayType*)(_currentDump.GetDump<uint8_t*>() + readOffset + index * sizeof(arrayType)));
+					readArr[index] = byteReader(*reinterpret_cast<arrayType*>(_currentDump.GetDump<uint8_t*>() + readOffset + index * sizeof(arrayType)));
 				}
 
 				if (_comparisonOperator(_knownValue, readArr))
@@ -459,8 +469,8 @@ namespace Xertz
 
 					for (int index = 0; index < itemCount; ++index)
 					{
-						*((arrayType*)_values + _resultCount * itemCount + index) = readArr[index];
-						*((arrayType*)_previousValues + _resultCount * itemCount + index) = *((arrayType*)(_results[_counterIteration - 1]->GetResultValues()) + _resultCount * itemCount + index);
+						*(reinterpret_cast<arrayType*>(_values) + _resultCount * itemCount + index) = readArr[index];
+						*(reinterpret_cast<arrayType*>(_previousValues) + _resultCount * itemCount + index) = *((arrayType*)(_results[_counterIteration - 1]->GetResultValues()) + _resultCount * itemCount + index);
 					}
 					++_resultCount;
 				}
@@ -475,8 +485,8 @@ namespace Xertz
 				{
 					for (uint64_t i = 0; i < _results[_counterIteration - 1]->GetResultCount(); ++i)
 					{
-						uint64_t readOffset = *(_results[_counterIteration - 1]->GetResultOffsets() + i);
-						dataType readVal = _byteReader(*(dataType*)(_currentDump.GetDump<uint8_t*>() + readOffset));
+						const uint64_t readOffset = *(_results[_counterIteration - 1]->GetResultOffsets() + i);
+						dataType readVal = _byteReader(*reinterpret_cast<dataType*>(_currentDump.GetDump<uint8_t*>() + readOffset));
 
 						if (_comparisonOperator(readVal, _knownValue, _secondaryKnownValue))
 						{
@@ -491,8 +501,8 @@ namespace Xertz
 				{
 					for (uint64_t i = 0; i < _results[_counterIteration - 1]->GetResultCount(); ++i)
 					{
-						uint64_t readOffset = *(_results[_counterIteration - 1]->GetResultOffsets() + i);
-						dataType readVal = _byteReader(*(dataType*)(_currentDump.GetDump<uint8_t*>() + readOffset));
+						const uint64_t readOffset = *(_results[_counterIteration - 1]->GetResultOffsets() + i);
+						dataType readVal = _byteReader(*reinterpret_cast<dataType*>(_currentDump.GetDump<uint8_t*>() + readOffset));
 
 						if (_comparisonOperator(readVal, _knownValue, _precision, false))
 						{
@@ -510,8 +520,8 @@ namespace Xertz
 				{
 					for (uint64_t i = 0; i < _results[_counterIteration - 1]->GetResultCount(); ++i)
 					{
-						uint64_t readOffset = *(_results[_counterIteration - 1]->GetResultOffsets() + i);
-						dataType readVal = _byteReader(*(dataType*)(_currentDump.GetDump<uint8_t*>() + readOffset));
+						const uint64_t readOffset = *(_results[_counterIteration - 1]->GetResultOffsets() + i);
+						dataType readVal = _byteReader(*reinterpret_cast<dataType*>(_currentDump.GetDump<uint8_t*>() + readOffset));
 
 						if (_comparisonOperator(readVal, _knownValue))
 						{
@@ -526,8 +536,8 @@ namespace Xertz
 				{
 					for (uint64_t i = 0; i < _results[_counterIteration - 1]->GetResultCount(); ++i)
 					{
-						uint64_t readOffset = *(_results[_counterIteration - 1]->GetResultOffsets() + i);
-						dataType readVal = _byteReader(*(dataType*)(_currentDump.GetDump<uint8_t*>() + readOffset));
+						const uint64_t readOffset = *(_results[_counterIteration - 1]->GetResultOffsets() + i);
+						dataType readVal = _byteReader(*reinterpret_cast<dataType*>(_currentDump.GetDump<uint8_t*>() + readOffset));
 
 						if (_comparisonOperator(readVal, _knownValue, _precision, false))
 						{
@@ -543,9 +553,9 @@ namespace Xertz
 
 		bool SetAndSaveResults()
 		{
-			_addresses = (addressType*)realloc(_addresses, sizeof(addressType) * _resultCount);
-			_values = (dataType*)realloc(_values, _valueSizeFactor * _resultCount);
-			_previousValues = (dataType*)realloc(_previousValues, _valueSizeFactor * _resultCount);
+			_addresses = static_cast<addressType*>(realloc(_addresses, sizeof(addressType) * _resultCount));
+			_values = static_cast<dataType*>(realloc(_values, _valueSizeFactor * _resultCount));
+			_previousValues = static_cast<dataType*>(realloc(_previousValues, _valueSizeFactor * _resultCount));
 
 			_results.push_back(new MemCompareResult<dataType, addressType>(false, GenerateFilePath(), _resultCount));
 			_results[_iterationCount]->SetValueWidth(&_knownValue);
@@ -571,7 +581,7 @@ namespace Xertz
 		void ReserveResultsSpace()
 		{
 			_currentDump = Xertz::SystemInfo::GetProcessInfo(_pid).DumpMemory(_dumpAddress, _dumpSize);
-			_addresses = (addressType*)malloc(_dumpSize * sizeof(addressType));
+			_addresses = static_cast<addressType*>(malloc(_dumpSize * sizeof(addressType)));
 
 			if constexpr (is_instantiation_of<dataType, OperativeArray>::value)
 			{
@@ -638,8 +648,8 @@ namespace Xertz
 				_byteReader.reader = _swapBytes ? DataAccess<dataType>::readReversed : DataAccess<dataType>::read;
 			}
 
-			_values = (dataType*)malloc(_dumpSize * _valueSizeFactor);
-			_previousValues = (dataType*)calloc(1, _dumpSize * _valueSizeFactor);
+			_values = static_cast<dataType*>(malloc(_dumpSize * _valueSizeFactor));
+			_previousValues = static_cast<dataType*>(calloc(1, _dumpSize * _valueSizeFactor));
 		}
 
 		void SetUpComparasionOperator()
@@ -854,7 +864,7 @@ namespace Xertz
 			}
 			else if constexpr (std::is_same_v<LitColor, dataType>)
 			{
-				int colorType = GetInstance()._knownValue.GetSelectedType();
+				const int colorType = GetInstance()._knownValue.GetSelectedType();
 				if (GetInstance()._iterationCount == 0)
 				{
 					if (isKnownValue)
