@@ -1,5 +1,6 @@
 #pragma once
 #include"definitions.h"
+#include "Windows.h"
 #include <type_traits>
 #include<string>
 #include <typeinfo>
@@ -29,7 +30,8 @@ namespace Xertz
 		int64_t GetProtect() const { return _protect; }
 		int64_t GetType() const { return _type; }
 		int32_t GetPartitionId() const { return _partitionId; }
-
+		bool SetAllocationProtect(const DWORD protect) const;
+		bool SetProtect(const HANDLE handle, const DWORD protect) const;
 		//bool Deallocate(); //ToDo
 		//bool Extend(const uint64_t size); //ToDo
 		//bool ChangeAllocationMode(const int val); //ToDo
