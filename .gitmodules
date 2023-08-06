@@ -1,9 +1,0 @@
-[submodule "OperativeArray"]
-	path = OperativeArray
-	url = https://github.com/CosmoCortney/OperativeArray.git
-[submodule "LitColor"]
-	path = LitColor
-	url = https://github.com/CosmoCortney/LitColor.git
-[submodule "MorphText"]
-	path = MorphText
-	url = https://github.com/CosmoCortney/MorphText.git
