@@ -144,11 +144,11 @@ bool Xertz::ProcessInfo::IsRunning()
     return _isRunning;
 }
 
-Xertz::MemDump Xertz::ProcessInfo::DumpMemory(void* address, const uint64_t size) const
+/*void* Xertz::ProcessInfo::DumpMemory(void* address, const uint64_t size) const
 {
 
     return Xertz::MemDump(_handle, address, size);
-}
+}*/
 
 void Xertz::ProcessInfo::ReadExRAM(void* out, const void* address, const unsigned long long size) const
 {

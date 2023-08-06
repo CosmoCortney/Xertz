@@ -16,33 +16,7 @@ namespace Xertz
 #define PROCESS_INFO Xertz::ProcessInfo
 #define PROCESS_INFO_LIST std::vector<Xertz::ProcessInfo>
 
-	template <typename T, template<typename...> class Template>
-	struct is_instantiation_of : std::false_type {};
-
-	template <template<typename...> class Template, typename... Args>
-	struct is_instantiation_of<Template<Args...>, Template> : std::true_type {};
-
-	enum Conditions
-	{
-		EQUAL = 0,
-		UNEQUAL = 1,
-		GREATER = 2,
-		GREATER_EQUAL = 3,
-		LOWER = 4,
-		LOWER_EQUAL = 5,
-		INCREASED_BY = 6,
-		DECREASED_BY = 7,
-		BETWEEN = 8,
-		NOT_BETWEEN = 9,
-		AND = 10,
-		OR = 11,
-	};
-
-	enum ComparasionTypes
-	{
-		UNKNOWN = 0,
-		KNOWN = 1
-	};
+	
 
 	template<typename T> static inline T SwapBytes(const T val)
 	{

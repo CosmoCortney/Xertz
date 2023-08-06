@@ -45,7 +45,7 @@ namespace Xertz
         std::wstring& GetFilePath();
         void ReadExRAM(void* out, const void* address, const uint64_t size) const;
         void WriteExRAM(const void* in, void* address, const uint64_t size) const;
-        MemDump DumpMemory(void* address, const uint64_t size) const;
+        //void* DumpMemory(void* address, const uint64_t size) const;
         template<typename T> bool FillProcessMemory(const uint64_t start, const uint64_t writeSize, const T val, const uint64_t valSize); //ToDo
         template<typename T> T AllocateRegion(const uint64_t size, const uint64_t allocationType, const uint64_t protection, const uint64_t address = NULL) //ToDo: make this typesafe
         {
