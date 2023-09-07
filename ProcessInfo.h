@@ -5,7 +5,6 @@
 #include<utility>
 #include"MemoryRegion.h"
 #include"definitions.h"
-#include"MemDump.h"
 
 namespace Xertz
 {
