@@ -1,5 +1,5 @@
 # Xertz
-A wrapper around the Windows API dedicated to manipulating games and other processes
+A Windows API Wrapper
 
 ## Definitions and datatypes
 See Classes for more information<br />
@@ -114,27 +114,3 @@ Returns the Region Type<br />
 #### int64_t Xertz::MemoryRegion::GetPartitionId()
 Returns the Partition ID<br />
 
-
-### Xertz::MemDump
-A classes that delivers useful information of any running process and features various functions<br />
-
-#### MemDump(HANDLE handle, uint64_t baseAddress, uint64_t startingAddress, uint64_t memSize)
-Creates an instance of the MemDump type of the handles' Process. baseAddress is the base address of where the desired memory area is located. startingAddress is the location of the desired memory area. memSize is the size of the memory area you want to dump.<br />
-
-#### MemDump(std::wstring& path, uint64_t baseAddress, uint64_t startingAddress, uint64_t size (optional), uint64_t pos (optional))
-Creates an instance of the MemDump type by the file expressed by path. baseAddress is the base address of the dumped memory. startingAddress is the beging of the memory area. size (optional) defines how many bytes to read from the file. pos (optional) defines where to start reading from the file (if not 0 startingAddress must be considered respectively)<br />
-
-#### ~MemDump()
-Frees the memory dump<br />
-
-#### bool SaveDump(std::wstring& filePath)
-Saves dump to file. If successful return value is true.<br />
-
-#### T GetBaseAddress()
-Returns the baseaddress as type T.<br />
-
-#### T GetStartingAddress()
-Returns the starting address as type T.<br />
-
-#### T GetDump()
-Returns the dump location's address as type T<br />
