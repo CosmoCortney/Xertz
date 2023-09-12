@@ -14,13 +14,13 @@ namespace Xertz
         bool _isX64 = false;
         bool _isRunning = false;
 		int _pid = -1;
+        bool _isOpen = false;
         HANDLE _handle = 0;
-        std::wstring _processName;
+        std::wstring _processNameW;
+        std::string _processName;
         REGION_LIST _memoryRegions;
         MODULE_LIST _modules;
         std::wstring _filepath;
-        bool RefreshRegionList();
-        bool RefreshModuleList();
 
     public:
         ProcessInfo() {}
@@ -33,7 +33,8 @@ namespace Xertz
         //~ProcessInfo();
 
         int GetPID() const;
-        std::wstring& GetProcessName();
+        std::wstring& GetProcessNameW();
+        std::string& GetProcessName();
         uint64_t GetModuleAddress(const std::wstring& moduleName) const;
         MODULE_LIST& GetModuleList();
         REGION_LIST& GetRegionList();
@@ -44,6 +45,9 @@ namespace Xertz
         std::wstring& GetFilePath();
         void ReadExRAM(void* out, const void* address, const uint64_t size) const;
         void WriteExRAM(const void* in, void* address, const uint64_t size) const;
+        bool IsOpen() const;
+        bool RefreshRegionList();
+        bool RefreshModuleList();
         //void* DumpMemory(void* address, const uint64_t size) const;
         template<typename T> bool FillProcessMemory(const uint64_t start, const uint64_t writeSize, const T val, const uint64_t valSize); //ToDo
         template<typename T> T AllocateRegion(const uint64_t size, const uint64_t allocationType, const uint64_t protection, const uint64_t address = NULL) //ToDo: make this typesafe
@@ -63,6 +67,7 @@ namespace Xertz
             _memoryRegions = other._memoryRegions;
             _modules = other._modules;
             _filepath = other._filepath;
+            _isOpen = other._isOpen;
 
             if (!_handle)
                 _handle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, _pid);

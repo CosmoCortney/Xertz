@@ -18,7 +18,6 @@ namespace Xertz
 		SystemInfo(SystemInfo const&) = delete;
 		void operator=(SystemInfo const&) = delete;
 		PROCESS_INFO_LIST s_processInfoList;
-		bool RefreshProcessInfoList();
 		static SystemInfo& GetInstance()
 		{
 			static SystemInfo Instance;
@@ -43,6 +42,7 @@ namespace Xertz
 		static bool GetMasterVolume(float* out, const bool scalar = true);
 		static bool SetMasterVolume(const float in, const bool scalar = true);
 		static bool SetMasterMute(const bool mute = true);
+		static bool RefreshProcessInfoList();
         template<typename T> static HWND GetWindowHandle(const T windowTitle)
 		{
 			 if constexpr (std::is_same_v<T, std::wstring>)

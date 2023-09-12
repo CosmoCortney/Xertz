@@ -4,18 +4,20 @@
 #include <codecvt>
 #include<Psapi.h>
 
-Xertz::ProcessInfo::ProcessInfo(const int pid, const std::wstring& processName)
+Xertz::ProcessInfo::ProcessInfo(const int pid, const std::wstring& processNameW)
 {
     _pid = pid;
-    _processName = processName;
+    _processNameW = processNameW;
+    _processName = std::string(processNameW.begin(), processNameW.end());
     
     if (_handle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid))
     {
+        _isOpen = _handle != 0;
         IsWow64Process(_handle, reinterpret_cast<int*>(&_isX64));
         _isX64 = !_isX64;
 
-        bool RefreshRegionList();
-        bool RefreshModuleList();
+        RefreshRegionList();
+        RefreshModuleList();
 
         //Get program file path
         WCHAR path[MAX_PATH];
@@ -74,6 +76,11 @@ bool Xertz::ProcessInfo::RefreshRegionList()
     {
         _memoryRegions.clear();
         _handle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, _pid);
+        _isOpen = _handle != 0;
+
+        if (!_isOpen)
+            return false;
+
         MEMORY_BASIC_INFORMATION buffer = { 0 };
         uint64_t addressSpace;
 
@@ -101,14 +108,24 @@ bool Xertz::ProcessInfo::RefreshRegionList()
     return false;
 }
 
+bool Xertz::ProcessInfo::IsOpen() const
+{
+    return _isOpen;
+}
+
 int Xertz::ProcessInfo::GetPID() const
 {
     return _pid;
 }
 
-std::wstring& Xertz::ProcessInfo::GetProcessName()
+std::string& Xertz::ProcessInfo::GetProcessName()
 {
     return _processName;
+}
+
+std::wstring& Xertz::ProcessInfo::GetProcessNameW()
+{
+    return _processNameW;
 }
 
 REGION_LIST& Xertz::ProcessInfo::GetRegionList()

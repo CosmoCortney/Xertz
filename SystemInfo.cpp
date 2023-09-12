@@ -28,7 +28,7 @@ Xertz::SystemInfo::~SystemInfo()
 
 bool Xertz::SystemInfo::RefreshProcessInfoList()
 {
-	s_processInfoList.clear();
+	GetInstance().s_processInfoList.clear();
 	HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
 	PROCESSENTRY32W entry;
 	entry.dwSize = sizeof(entry);
@@ -37,7 +37,7 @@ bool Xertz::SystemInfo::RefreshProcessInfoList()
 	{
 		do
 		{
-			s_processInfoList.emplace_back(entry.th32ProcessID, std::wstring(entry.szExeFile));
+			GetInstance().s_processInfoList.emplace_back(entry.th32ProcessID, std::wstring(entry.szExeFile));
 		} while (Process32NextW(snap, &entry));
 
 		return true;
@@ -48,23 +48,19 @@ bool Xertz::SystemInfo::RefreshProcessInfoList()
 
 PROCESS_INFO_LIST& Xertz::SystemInfo::GetProcessInfoList()
 {
-	GetInstance().RefreshProcessInfoList();
 	return GetInstance().s_processInfoList;
 }
 
 PROCESS_INFO Xertz::SystemInfo::GetProcessInfo(const int pid)
 {
-	if (GetInstance().RefreshProcessInfoList())
+	for (int i = 0; i < GetInstance().s_processInfoList.size(); ++i)
 	{
-		for (int i = 0; i < GetInstance().s_processInfoList.size(); ++i)
+		if (GetInstance().s_processInfoList[i].GetPID() == pid)
 		{
-			if (GetInstance().s_processInfoList[i].GetPID() == pid)
-			{
-				return GetInstance().s_processInfoList[i];
-			}
+			return GetInstance().s_processInfoList[i];
 		}
 	}
-
+	
 	return ProcessInfo(-1, L"Process not found");
 }
 
@@ -76,15 +72,15 @@ PROCESS_INFO Xertz::SystemInfo::GetProcessInfo(std::wstring processName, const b
 		{
 			if (caseSensitive)
 			{
-				if ((substring && GetInstance().s_processInfoList[i].GetProcessName().find(processName) != -1) ||  /*case sensitive and contains*/
-					(!substring && GetInstance().s_processInfoList[i].GetProcessName().compare(processName) == 0)) /*case sensitive and same*/
+				if ((substring && GetInstance().s_processInfoList[i].GetProcessNameW().find(processName) != -1) ||  /*case sensitive and contains*/
+					(!substring && GetInstance().s_processInfoList[i].GetProcessNameW().compare(processName) == 0)) /*case sensitive and same*/
 				{
 					return GetInstance().s_processInfoList[i];
 				}
 			}
 			else
 			{
-				std::wstring lProcessName = GetInstance().s_processInfoList[i].GetProcessName();
+				std::wstring lProcessName = GetInstance().s_processInfoList[i].GetProcessNameW();
 				lProcessName = GetInstance().WString2Lower(lProcessName);
 				processName = GetInstance().WString2Lower(processName);
 
