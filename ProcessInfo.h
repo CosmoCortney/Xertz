@@ -64,6 +64,7 @@ namespace Xertz
             _pid = other._pid;
             _handle = other._handle;
             _processName = other._processName;
+            _processNameW = other._processNameW;
             _memoryRegions = other._memoryRegions;
             _modules = other._modules;
             _filepath = other._filepath;
