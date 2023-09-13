@@ -46,9 +46,61 @@ bool Xertz::SystemInfo::RefreshProcessInfoList()
 	return false;
 }
 
+void Xertz::SystemInfo::obtainHWNDs()
+{
+	_windows.clear();
+	EnumWindows(EnumWindowsProc, reinterpret_cast<LPARAM>(&_windows));
+}
+
+bool Xertz::SystemInfo::RefreshApplicationProcessInfoList()
+{
+	GetInstance().s_applicationProcessInfoList.clear();
+	GetInstance().obtainHWNDs();
+	DWORD previousPid = 0;
+	std::vector<std::wstring> foundApps;
+
+	for (HWND window : GetInstance()._windows)
+	{
+		DWORD anotherpid;
+		DWORD pid = GetWindowThreadProcessId(window, &anotherpid);
+
+		if (anotherpid < 1)
+			continue;
+
+		if (anotherpid == previousPid)
+			continue;
+		
+		for (ProcessInfo& process : GetInstance().s_processInfoList)
+		{
+			bool found = false;
+			if (process.GetPID() != anotherpid)
+				continue;
+
+			for (std::wstring& processName : foundApps)
+				if (process.GetProcessNameW().compare(processName) == 0)
+					found = true;
+			
+			if (found)
+				continue;
+
+			GetInstance().s_applicationProcessInfoList.push_back(process);
+			foundApps.push_back(process.GetProcessNameW());
+			previousPid = anotherpid;
+			break;
+		}
+	}
+
+	return GetInstance().s_applicationProcessInfoList.size();
+}
+
 PROCESS_INFO_LIST& Xertz::SystemInfo::GetProcessInfoList()
 {
 	return GetInstance().s_processInfoList;
+}
+
+PROCESS_INFO_LIST& Xertz::SystemInfo::GetApplicationProcessInfoList()
+{
+	return GetInstance().s_applicationProcessInfoList;
 }
 
 PROCESS_INFO Xertz::SystemInfo::GetProcessInfo(const int pid)
