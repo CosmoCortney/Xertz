@@ -3,6 +3,8 @@
 #include <locale>
 #include <codecvt>
 #include<Psapi.h>
+#include<filesystem>
+#include<fstream>
 
 Xertz::ProcessInfo::ProcessInfo(const int pid, const std::wstring& processNameW)
 {
@@ -161,11 +163,31 @@ bool Xertz::ProcessInfo::IsRunning()
     return _isRunning;
 }
 
-/*void* Xertz::ProcessInfo::DumpMemory(void* address, const uint64_t size) const
+bool Xertz::ProcessInfo::DumpMemory(void* address, std::wstring& path, const uint64_t size) const
 {
+    std::wstring directoryPath = path.substr(0, path.find_last_of(L"\\"));
+    
+    if (!std::filesystem::is_directory(directoryPath))
+        if (!std::filesystem::create_directory(directoryPath))
+            return false;
 
-    return Xertz::MemDump(_handle, address, size);
-}*/
+    char* dump = new char[size];
+    ReadExRAM(dump, address, size);
+
+    std::ofstream file(path, std::ios::binary | std::ios::out);
+    if (!file)
+        return false;
+
+    file.write(dump, size);
+    file.close();
+    delete[] dump;
+    return true;
+}
+
+bool Xertz::ProcessInfo::DumpMemory(MemoryRegion& region, std::wstring& path) const
+{
+    return DumpMemory(region.GetBaseAddress<void*>(), path, region.GetRegionSize());
+}
 
 void Xertz::ProcessInfo::ReadExRAM(void* out, const void* address, const unsigned long long size) const
 {

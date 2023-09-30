@@ -48,7 +48,9 @@ namespace Xertz
         bool IsOpen() const;
         bool RefreshRegionList();
         bool RefreshModuleList();
-        //void* DumpMemory(void* address, const uint64_t size) const;
+        bool DumpMemory(void* address, std::wstring& path, const uint64_t size) const;
+        bool DumpMemory(MemoryRegion& region, std::wstring& path) const;
+
         template<typename T> bool FillProcessMemory(const uint64_t start, const uint64_t writeSize, const T val, const uint64_t valSize); //ToDo
         template<typename T> T AllocateRegion(const uint64_t size, const uint64_t allocationType, const uint64_t protection, const uint64_t address = NULL) //ToDo: make this typesafe
         {
