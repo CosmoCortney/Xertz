@@ -52,6 +52,12 @@ void Xertz::SystemInfo::obtainHWNDs()
 	EnumWindows(EnumWindowsProc, reinterpret_cast<LPARAM>(&_windows));
 }
 
+WINDOW_HANDLE_LIST& Xertz::SystemInfo::GetWindowHandleList()
+{
+	GetInstance().obtainHWNDs();
+	return GetInstance()._windows;
+}
+
 bool Xertz::SystemInfo::RefreshApplicationProcessInfoList()
 {
 	GetInstance().s_applicationProcessInfoList.clear();

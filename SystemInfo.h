@@ -55,6 +55,7 @@ namespace Xertz
 		static bool SetMasterMute(const bool mute = true);
 		static bool RefreshProcessInfoList();
 		static bool RefreshApplicationProcessInfoList();
+		static WINDOW_HANDLE_LIST& GetWindowHandleList();
         template<typename T> static HWND GetWindowHandle(const T windowTitle)
 		{
 			 if constexpr (std::is_same_v<T, std::wstring>)

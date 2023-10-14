@@ -15,7 +15,7 @@ namespace Xertz
 #define REGION_LIST std::vector<Xertz::MemoryRegion>
 #define PROCESS_INFO Xertz::ProcessInfo
 #define PROCESS_INFO_LIST std::vector<Xertz::ProcessInfo>
-
+#define WINDOW_HANDLE_LIST std::vector<HWND>
 	
 
 	template<typename T> static inline T SwapBytes(const T val)
