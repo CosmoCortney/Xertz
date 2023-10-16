@@ -189,12 +189,38 @@ bool Xertz::ProcessInfo::DumpMemory(MemoryRegion& region, std::wstring& path) co
     return DumpMemory(region.GetBaseAddress<void*>(), path, region.GetRegionSize());
 }
 
-void Xertz::ProcessInfo::ReadExRAM(void* out, const void* address, const unsigned long long size) const
+void Xertz::ProcessInfo::ReadExRAM(void* out, const void* address, const unsigned long long size, const uint64_t forceSteps) const
 {
-    ReadProcessMemory(_handle, address, out, size, nullptr);
+    if (forceSteps)
+    {
+        char* outInc = reinterpret_cast<char*>(out);
+        char* addressInc = (char*)address;
+
+        for (uint64_t offset = 0; offset < size; offset += forceSteps)
+        {
+            ReadProcessMemory(_handle, addressInc, outInc, forceSteps, nullptr);
+            outInc += forceSteps;
+            addressInc += forceSteps;
+        }
+    }
+    else
+        ReadProcessMemory(_handle, address, out, size, nullptr);
 }
 
-void Xertz::ProcessInfo::WriteExRAM(const void* in, void* address, const unsigned long long size) const
+void Xertz::ProcessInfo::WriteExRAM(const void* in, void* address, const unsigned long long size, const uint64_t forceSteps) const
 {
-    WriteProcessMemory(_handle, address, in, size, nullptr);
+    if (forceSteps)
+    {
+        char* inInc = (char*)in;
+        char* addressInc = reinterpret_cast<char*>(address);
+
+        for (uint64_t offset = 0; offset < size; offset += forceSteps)
+        {
+            WriteProcessMemory(_handle, addressInc, inInc, forceSteps, nullptr);
+            inInc += forceSteps;
+            addressInc += forceSteps;
+        }
+    }
+    else
+        WriteProcessMemory(_handle, address, in, size, nullptr);
 }

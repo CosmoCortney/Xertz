@@ -43,8 +43,8 @@ namespace Xertz
         bool IsX64() const;
         bool IsRunning();
         std::wstring& GetFilePath();
-        void ReadExRAM(void* out, const void* address, const uint64_t size) const;
-        void WriteExRAM(const void* in, void* address, const uint64_t size) const;
+        void ReadExRAM(void* out, const void* address, const uint64_t size, const uint64_t forceSteps = 0) const;
+        void WriteExRAM(const void* in, void* address, const uint64_t size, const uint64_t forceSteps = 0) const;
         bool IsOpen() const;
         bool RefreshRegionList();
         bool RefreshModuleList();
