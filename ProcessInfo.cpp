@@ -55,7 +55,6 @@ bool Xertz::ProcessInfo::RefreshModuleList()
 
 MODULE_LIST& Xertz::ProcessInfo::GetModuleList()
 {
-    RefreshModuleList();
     return _modules;
 }
 
@@ -132,7 +131,6 @@ std::wstring& Xertz::ProcessInfo::GetProcessNameW()
 
 REGION_LIST& Xertz::ProcessInfo::GetRegionList()
 {
-    RefreshRegionList();
     return _memoryRegions;
 }
 
