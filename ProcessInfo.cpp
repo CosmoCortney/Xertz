@@ -191,14 +191,16 @@ void Xertz::ProcessInfo::ReadExRAM(void* out, const void* address, const unsigne
 {
     if (forceSteps)
     {
+        int64_t remaining = size;
         char* outInc = reinterpret_cast<char*>(out);
         char* addressInc = (char*)address;
 
         for (uint64_t offset = 0; offset < size; offset += forceSteps)
         {
-            ReadProcessMemory(_handle, addressInc, outInc, forceSteps, nullptr);
+            ReadProcessMemory(_handle, addressInc, outInc, remaining < forceSteps ? remaining : forceSteps, nullptr);
             outInc += forceSteps;
             addressInc += forceSteps;
+            remaining -= forceSteps;
         }
     }
     else
