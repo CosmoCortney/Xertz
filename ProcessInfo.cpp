@@ -157,7 +157,8 @@ bool Xertz::ProcessInfo::IsX64() const
 bool Xertz::ProcessInfo::IsRunning()
 {
     DWORD lpExitCode;
-    _isRunning = (GetExitCodeProcess(_handle, &lpExitCode) == STILL_ACTIVE) ? true : false;
+    GetExitCodeProcess(_handle, &lpExitCode);
+    _isRunning = lpExitCode == STILL_ACTIVE;
     return _isRunning;
 }
 
