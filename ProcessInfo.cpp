@@ -5,6 +5,7 @@
 #include<Psapi.h>
 #include<filesystem>
 #include<fstream>
+#include"SystemInfo.h"
 
 Xertz::ProcessInfo::ProcessInfo(const int pid, const std::wstring& processNameW)
 {
@@ -208,7 +209,30 @@ void Xertz::ProcessInfo::ReadExRAM(void* out, const void* address, const unsigne
         ReadProcessMemory(_handle, address, out, size, nullptr);
 }
 
-void Xertz::ProcessInfo::WriteExRAM(const void* in, void* address, const unsigned long long size, const uint64_t forceSteps) const
+void Xertz::ProcessInfo::WriteMemoryFast(void* in, void* address, const unsigned long long size, const uint64_t forceSteps) const
+{
+    NTSTATUS status;
+    if (forceSteps)
+    {
+        char* inInc = (char*)in;
+        char* addressInc = reinterpret_cast<char*>(address);
+
+        for (uint64_t offset = 0; offset < size; offset += forceSteps)
+        {
+            pNtWriteVirtualMemory NtWriteVirtualMemory = (pNtWriteVirtualMemory)GetProcAddress(SystemInfo::GetNtDllHandle(), "NtWriteVirtualMemory");
+            /*status = */NtWriteVirtualMemory(_handle, addressInc, inInc, size, nullptr);
+            inInc += forceSteps;
+            addressInc += forceSteps;
+        }
+    }
+    else
+    {
+        pNtWriteVirtualMemory NtWriteVirtualMemory = (pNtWriteVirtualMemory)GetProcAddress(SystemInfo::GetNtDllHandle(), "NtWriteVirtualMemory");
+        status = NtWriteVirtualMemory(_handle, address, in, size, nullptr);
+    }
+}
+
+void Xertz::ProcessInfo::WriteMemorySafe(const void* in, void* address, const unsigned long long size, const uint64_t forceSteps) const
 {
     if (forceSteps)
     {

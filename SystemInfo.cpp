@@ -15,6 +15,8 @@ Xertz::SystemInfo::SystemInfo()
 		_defaultDevice->Release();
 		_defaultDevice = NULL;
 	}
+
+	_ntdll = GetModuleHandleW(L"ntdll.dll");
 }
 
 Xertz::SystemInfo::~SystemInfo()
@@ -56,6 +58,11 @@ WINDOW_HANDLE_LIST& Xertz::SystemInfo::GetWindowHandleList()
 {
 	GetInstance().obtainHWNDs();
 	return GetInstance()._windows;
+}
+
+HMODULE Xertz::SystemInfo::GetNtDllHandle()
+{
+	return GetInstance()._ntdll;
 }
 
 bool Xertz::SystemInfo::RefreshApplicationProcessInfoList()

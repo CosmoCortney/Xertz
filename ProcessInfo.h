@@ -22,6 +22,14 @@ namespace Xertz
         MODULE_LIST _modules;
         std::wstring _filepath;
 
+        typedef NTSTATUS(WINAPI* pNtWriteVirtualMemory)(
+            HANDLE ProcessHandle,
+            PVOID BaseAddress,
+            PVOID Buffer,
+            ULONG NumberOfBytesToWrite,
+            PULONG NumberOfBytesWritten
+            );
+
     public:
         ProcessInfo() {}
         ProcessInfo(const ProcessInfo& other)
@@ -44,7 +52,8 @@ namespace Xertz
         bool IsRunning();
         std::wstring& GetFilePath();
         void ReadExRAM(void* out, const void* address, const uint64_t size, const uint64_t forceSteps = 0) const;
-        void WriteExRAM(const void* in, void* address, const uint64_t size, const uint64_t forceSteps = 0) const;
+        void WriteMemoryFast(void* in, void* address, const uint64_t size, const uint64_t forceSteps = 0) const;
+        void WriteMemorySafe(const void* in, void* address, const uint64_t size, const uint64_t forceSteps = 0) const;
         bool IsOpen() const;
         bool RefreshRegionList();
         bool RefreshModuleList();

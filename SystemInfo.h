@@ -34,6 +34,7 @@ namespace Xertz
 		IMMDevice* _defaultDevice = NULL;
 		IAudioEndpointVolume* _endpointVolume = NULL;
 		const float _percentageFactor = 100.0f;
+		HMODULE _ntdll = 0;
 
 		void obtainHWNDs();
 		static BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam)
@@ -56,7 +57,9 @@ namespace Xertz
 		static bool RefreshProcessInfoList();
 		static bool RefreshApplicationProcessInfoList();
 		static WINDOW_HANDLE_LIST& GetWindowHandleList();
-        template<typename T> static HWND GetWindowHandle(const T windowTitle)
+		static HMODULE GetNtDllHandle();
+        
+		template<typename T> static HWND GetWindowHandle(const T windowTitle)
 		{
 			 if constexpr (std::is_same_v<T, std::wstring>)
 			 	return FindWindowW(NULL, windowTitle.c_str());
