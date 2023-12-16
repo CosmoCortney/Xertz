@@ -172,7 +172,7 @@ bool Xertz::ProcessInfo::DumpMemory(void* address, std::wstring& path, const uin
             return false;
 
     char* dump = new char[size];
-    ReadExRAM(dump, address, size);
+    ReadMemorySafe(dump, address, size);
 
     std::ofstream file(path, std::ios::binary | std::ios::out);
     if (!file)
@@ -189,7 +189,34 @@ bool Xertz::ProcessInfo::DumpMemory(MemoryRegion& region, std::wstring& path) co
     return DumpMemory(region.GetBaseAddress<void*>(), path, region.GetRegionSize());
 }
 
-void Xertz::ProcessInfo::ReadExRAM(void* out, const void* address, const unsigned long long size, const uint64_t forceSteps) const
+void Xertz::ProcessInfo::ReadMemoryFast(void* out, void* address, const unsigned long long size, const uint64_t forceSteps) const
+{
+    static std::string functionName = "NtReadVirtualMemory";
+    /*NTSTATUS status;*/
+
+    if (forceSteps)
+    {
+        int64_t remaining = size;
+        char* outInc = reinterpret_cast<char*>(out);
+        char* addressInc = (char*)address;
+
+        for (uint64_t offset = 0; offset < size; offset += forceSteps)
+        {
+            pNtReadVirtualMemory NtReadVirtualMemory = (pNtReadVirtualMemory)GetProcAddress(SystemInfo::GetNtDllHandle(), functionName.c_str());
+            /*status = */NtReadVirtualMemory(_handle, addressInc, outInc, remaining < forceSteps ? remaining : forceSteps, nullptr);
+            outInc += forceSteps;
+            addressInc += forceSteps;
+            remaining -= forceSteps;
+        }
+    }
+    else
+    {
+        pNtReadVirtualMemory NtReadVirtualMemory = (pNtReadVirtualMemory)GetProcAddress(SystemInfo::GetNtDllHandle(), functionName.c_str());
+        /*status = */NtReadVirtualMemory(_handle, address, out, size, nullptr);
+    }
+}
+
+void Xertz::ProcessInfo::ReadMemorySafe(void* out, const void* address, const unsigned long long size, const uint64_t forceSteps) const
 {
     if (forceSteps)
     {
@@ -211,24 +238,27 @@ void Xertz::ProcessInfo::ReadExRAM(void* out, const void* address, const unsigne
 
 void Xertz::ProcessInfo::WriteMemoryFast(void* in, void* address, const unsigned long long size, const uint64_t forceSteps) const
 {
-    NTSTATUS status;
+    static std::string functionName = "NtWriteVirtualMemory";
+    /*NTSTATUS status;*/
     if (forceSteps)
     {
+        int64_t remaining = size;
         char* inInc = (char*)in;
         char* addressInc = reinterpret_cast<char*>(address);
 
         for (uint64_t offset = 0; offset < size; offset += forceSteps)
         {
-            pNtWriteVirtualMemory NtWriteVirtualMemory = (pNtWriteVirtualMemory)GetProcAddress(SystemInfo::GetNtDllHandle(), "NtWriteVirtualMemory");
-            /*status = */NtWriteVirtualMemory(_handle, addressInc, inInc, size, nullptr);
+            pNtWriteVirtualMemory NtWriteVirtualMemory = (pNtWriteVirtualMemory)GetProcAddress(SystemInfo::GetNtDllHandle(), functionName.c_str());
+            /*status = */NtWriteVirtualMemory(_handle, addressInc, inInc, remaining < forceSteps ? remaining : forceSteps, nullptr);
             inInc += forceSteps;
             addressInc += forceSteps;
+            remaining -= forceSteps;
         }
     }
     else
     {
-        pNtWriteVirtualMemory NtWriteVirtualMemory = (pNtWriteVirtualMemory)GetProcAddress(SystemInfo::GetNtDllHandle(), "NtWriteVirtualMemory");
-        status = NtWriteVirtualMemory(_handle, address, in, size, nullptr);
+        pNtWriteVirtualMemory NtWriteVirtualMemory = (pNtWriteVirtualMemory)GetProcAddress(SystemInfo::GetNtDllHandle(), functionName.c_str());
+        /*status = */NtWriteVirtualMemory(_handle, address, in, size, nullptr);
     }
 }
 
@@ -236,14 +266,16 @@ void Xertz::ProcessInfo::WriteMemorySafe(const void* in, void* address, const un
 {
     if (forceSteps)
     {
+        int64_t remaining = size;
         char* inInc = (char*)in;
         char* addressInc = reinterpret_cast<char*>(address);
 
         for (uint64_t offset = 0; offset < size; offset += forceSteps)
         {
-            WriteProcessMemory(_handle, addressInc, inInc, forceSteps, nullptr);
+            WriteProcessMemory(_handle, addressInc, inInc, remaining < forceSteps ? remaining : forceSteps, nullptr);
             inInc += forceSteps;
             addressInc += forceSteps;
+            remaining -= forceSteps;
         }
     }
     else
