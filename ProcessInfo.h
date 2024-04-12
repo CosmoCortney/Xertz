@@ -22,6 +22,8 @@ namespace Xertz
         MODULE_LIST _modules;
         std::wstring _filepath;
 
+        typedef LONG NTSTATUS;
+
         typedef NTSTATUS(WINAPI* pNtReadVirtualMemory)(
             HANDLE ProcessHandle,
             PVOID BaseAddress,
