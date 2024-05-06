@@ -1,9 +1,8 @@
 #pragma once
 #include<string>
-#include<Windows.h>
 #include<vector>
 #include<utility>
-#include"MemoryRegion.h"
+#include"MemoryRegion.h" //also includes Windows.h
 #include"definitions.h"
 
 namespace Xertz

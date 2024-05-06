@@ -1,12 +1,11 @@
 #pragma once
 #include"definitions.h"
-#include"ProcessInfo.h"
+#include"ProcessInfo.h" //also includes Windows.h and MemoryRegions.h
 #include<vector>
 #include<tlhelp32.h>
 #include <audioclient.h>
 #include <mmdeviceapi.h>
 #include <endpointvolume.h>
-#include <windows.h>
 
 namespace Xertz
 {
