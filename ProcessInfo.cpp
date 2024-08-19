@@ -1,11 +1,11 @@
-#include"ProcessInfo.h"
-#include<tlhelp32.h>
+#include "ProcessInfo.hpp"
+#include <tlhelp32.h>
 #include <locale>
 #include <codecvt>
-#include<Psapi.h>
-#include<filesystem>
-#include<fstream>
-#include"SystemInfo.h"
+#include <Psapi.h>
+#include <filesystem>
+#include <fstream>
+#include "SystemInfo.hpp"
 
 Xertz::ProcessInfo::ProcessInfo(const int pid, const std::wstring& processNameW)
 {

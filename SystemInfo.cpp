@@ -1,6 +1,7 @@
-#include"SystemInfo.h"
+#include"SystemInfo.hpp"
 #include<algorithm>
 #include<iostream>
+
 Xertz::SystemInfo::SystemInfo()
 {
 	CoInitialize(nullptr);

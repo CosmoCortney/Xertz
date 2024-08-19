@@ -1,8 +1,8 @@
 #pragma once
-#include"definitions.h"
+#include "definitions.hpp"
 #include "Windows.h"
 #include <type_traits>
-#include<string>
+#include <string>
 #include <typeinfo>
 
 namespace Xertz
