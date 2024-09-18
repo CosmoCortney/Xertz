@@ -102,6 +102,11 @@ bool Xertz::ProcessInfo::RefreshRegionList()
                                     buffer.Type,
                                     buffer.PartitionId);
 
+            //check if a process cadaver sneaked into here somehow
+            if (buffer.RegionSize == 0)
+                if(buffer.BaseAddress == 0)
+                    return false;
+
             _memoryRegions.push_back(temp_record);
             rangeIterator += buffer.RegionSize;
         }
