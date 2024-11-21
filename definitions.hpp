@@ -37,7 +37,7 @@ namespace Xertz
 		return *reinterpret_cast<OutType*>(&val);
 	}
 
-	static bool SaveBinary(const std::wstring& filePath, void* data, const uint64_t size, const bool append = false, const bool zip = false)
+	static bool SaveBinary(const std::wstring& filePath, void* data, const uint64_t size, const bool append = false/*, const bool zip = false*/)
 	{
 		std::ofstream file(filePath, std::ios::binary | (append ? std::ios_base::app : std::ios::out));
 		if (!file)
